@@ -111,7 +111,7 @@ class TaskManagerWindow(QMainWindow):
         self.update_process_list(get_process_list())
 
         for col in range(self.process_table.columnCount()):
-            if col is not 1 or col is not 2:
+            if col != 1 or col != 2:
                 self.process_table.resizeColumnToContents(col)
         self.process_table.resizeRowsToContents()
         self.process_table.setColumnWidth(1, 65)

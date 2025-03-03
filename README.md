@@ -12,7 +12,7 @@ The multitool program will allow you to remove viruses (may be) and restore Wind
 > ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/ZhenyaYoratt/YoHelper?style=flat-square)
 
 > [!IMPORTANT]
-> This program is developed in Russian, but it does not yet have an international translation, including English. Please be patient!
+> This program is developed in Russian, but it is currently being translated into English. Please be patient!
 
 ## Download
 Download [the lastest release version](https://github.com/ZhenyaYoratt/YoHelper/releases) of the program. There are also file hashes and links to antivirus scans.
@@ -32,12 +32,13 @@ The following features are built into the program:
 
 ## Known issues
 - The process type (Task Manager) are not displayed correctly.
-- The program freezes while scanning the folder for viruses.
+- The point recovery section is not working at the moment.
+- The installer cannot run a program that requires administrator privileges.
 <!-- There are no issues at the moment. If you find problems, feel free to [create a Issue](github.com/ZhenyaYoratt/YoHelper/issues) and describe it.-->
 
 ## TODO
-- [ ] Add external authorization to NedoTube account
 - [ ] Translate program to English (i18n)
+- [ ] Add external authorization to NedoTube account
 
 ## Build
 To build the program, just run this command:
