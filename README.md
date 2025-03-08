@@ -4,7 +4,7 @@
 
 The multitool program will allow you to remove viruses (may be) and restore Windows 10 to its perfect state. This program is designed exclusively for [the YouTube channel "NEDOHACKERS Lite"](https://youtube.com/@nedohackerslite).
 
-![GitHub Downloads (all assets, latest release)](https://img.shields.io/github/downloads/ZhenyaYoratt/YoHelper/latest/total?style=for-the-badge&logo=github) ![GitHub file size in bytes](https://img.shields.io/github/size/ZhenyaYoratt/YoHelper/main.py)
+[![DOWNLOAD THE LATEST VERSION](https://img.shields.io/badge/DOWNLOAD_THE_LATEST_VERSION-%231d7c15?style=for-the-badge&logo=github)](https://github.com/ZhenyaYoratt/YoHelper/releases/tag/v0.1) [![GitHub Downloads (all assets, latest release)](https://img.shields.io/github/downloads-pre/ZhenyaYoratt/YoHelper/latest/total?style=flat-square)](https://github.com/ZhenyaYoratt/YoHelper/releases/)
 
 > [!CAUTION]
 > This program needs to be improved to its ideal state. **Use it AT <ins>YOUR OWN RISK AND RISK</ins>, test it ONLY ON VIRTUAL MACHINES.** If you find problems, feel free to [create a Issue](/issues) and describe it!
@@ -16,8 +16,6 @@ The multitool program will allow you to remove viruses (may be) and restore Wind
 
 ## Download
 Download [the lastest release version](https://github.com/ZhenyaYoratt/YoHelper/releases) of the program. There are also file hashes and links to antivirus scans.
-[![VirusTotal results](https://img.shields.io/badge/VirusTotal-blue?style=flat-square)](https://virustotal.com)
-<!-- VirusTotal/Trag.le -->
 
 ## Features
 The following features are built into the program:
