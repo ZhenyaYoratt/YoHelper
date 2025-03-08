@@ -1,6 +1,11 @@
 from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QHBoxLayout, QLabel, QTableWidget, QTableWidgetItem, QProgressBar, QDialog, QInputDialog, QMessageBox, QPushButton, QWidget, QListWidgetItem
 from PyQt5.QtCore import Qt
-import psutil
+try:
+    from psutil import disk_partitions, disk_usage
+except ImportError:
+    # empty
+    def disk_partitions(**k):
+        return None
 from modules.disk_manager import *
 from modules.titles import make_title
 from pyqt_windows_os_light_dark_theme_window.main import Window
@@ -88,38 +93,39 @@ class DiskManagerWindow(QMainWindow, Window):
 
     def refresh_disk_list(self):
         """Обновляет список дисков."""
-        partitions = psutil.disk_partitions()
+        partitions = disk_partitions()
         self.disk_table.setRowCount(len(partitions))
 
-        for row, partition in enumerate(partitions):
-            # Диск
-            item = QTableWidgetItem(partition.device)
-            item.setIcon(QIcon(get_disk_icon(partition.device, 16)))
-            self.disk_table.setItem(row, 0, item)
+        if partitions:
+            for row, partition in enumerate(partitions):
+                # Диск
+                item = QTableWidgetItem(partition.device)
+                item.setIcon(QIcon(get_disk_icon(partition.device, 16)))
+                self.disk_table.setItem(row, 0, item)
 
-            # Название (имя устройства)
-            self.disk_table.setItem(row, 1, QTableWidgetItem(get_volume_name(partition.device)))
+                # Название (имя устройства)
+                self.disk_table.setItem(row, 1, QTableWidgetItem(get_volume_name(partition.device)))
 
-            # Проверка на защиту BitLocker
-            bitlocker_status = is_bitlocker_protected(partition.device)  
-            self.disk_table.setItem(row, 2, QTableWidgetItem(self.parent().tr("Да") if bitlocker_status == True else self.parent().tr("Нет") if bitlocker_status == False else "N/A"))
+                # Проверка на защиту BitLocker
+                bitlocker_status = is_bitlocker_protected(partition.device)  
+                self.disk_table.setItem(row, 2, QTableWidgetItem(self.parent().tr("Да") if bitlocker_status == True else self.parent().tr("Нет") if bitlocker_status == False else "N/A"))
 
-            # Прогресс бар
-            progress = QProgressBar()
-            self.disk_table.setCellWidget(row, 3, progress)
+                # Прогресс бар
+                progress = QProgressBar()
+                self.disk_table.setCellWidget(row, 3, progress)
 
-            disk_status = check_disk_status(partition.mountpoint)
-            if disk_status:
-                usage = psutil.disk_usage(partition.mountpoint)
-                progress.setValue(int((usage.used / usage.total) * 100))
-            else:
-                progress.setDisabled(True)
-            
-            # Доступность
-            self.disk_table.setItem(row, 4, QTableWidgetItem("ОК" if disk_status else self.parent().tr("Недоступно")))
-            
-            # Тип
-            self.disk_table.setItem(row, 5, QTableWidgetItem(get_disk_type(partition.mountpoint)))
+                disk_status = check_disk_status(partition.mountpoint)
+                if disk_status:
+                    usage = disk_usage(partition.mountpoint)
+                    progress.setValue(int((usage.used / usage.total) * 100))
+                else:
+                    progress.setDisabled(True)
+                
+                # Доступность
+                self.disk_table.setItem(row, 4, QTableWidgetItem("ОК" if disk_status else self.parent().tr("Недоступно")))
+                
+                # Тип
+                self.disk_table.setItem(row, 5, QTableWidgetItem(get_disk_type(partition.mountpoint)))
 
         self.disk_table.resizeColumnsToContents()
         self.disk_table.resizeRowsToContents()

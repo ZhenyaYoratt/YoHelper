@@ -1,12 +1,39 @@
 import os
-print('Installing requirements...')
-os.system('pip install -r requirements.txt --upgrade')
-print('Upgrading python tools...')
-os.system('python -m ensurepip --upgrade')
-os.system('python -m pip install --upgrade setuptools')
+from PyInstaller.utils.hooks import collect_submodules
+import PyInstaller.__main__
+
+#print('Installing requirements...')
+#os.system('pip install -r requirements.txt --upgrade')
+#print('Upgrading python tools...')
+#os.system('python -m ensurepip --upgrade')
+#os.system('python -m pip install --upgrade setuptools')
+
+
 print('Starting building...')
-os.system('pyinstaller .\\modules\\tts.py --onefile --windowed')
-os.system('pyinstaller main.py --onefile -n YoHelper --windowed --uac-admin --optimize 2 --upx-dir "C:\\upx-4.2.4-win64" --icon=icon.ico --splash=splash.png --hidden-import psutil --hidden-import PyQt5.sip --hidden-import PyQt5.QtCore --hidden-import PyQt5.QtGui --hidden-import PyQt5.QtWidgets')
+hiddenimports = collect_submodules('psutil')
+hiddenimports += collect_submodules('PyQt5.QtCore')
+hiddenimports += collect_submodules('PyQt5.QtGui')
+hiddenimports += collect_submodules('PyQt5.QtWidgets')
+print('hiddenimports:', hiddenimports)
+
+PyInstaller.__main__.run([
+    '.\\modules\\tts.py',
+    '--onefile',
+    '--windowed'
+])
+
+PyInstaller.__main__.run([
+    'main.py',
+    '--onefile',
+    '--windowed',
+    '--name=YoHelper',
+    '--uac-admin',
+    '--optimize=2',
+    '--upx-dir="C:\\upx-4.2.4-win64"',
+    '--icon=icon.ico',
+    '--splash=splash.png',
+    '--hidden-import=' + ' '.join(hiddenimports)
+])
 #os.system('pyinstaller installer.py --onefile --add-data dist:YoHelper.exe --windowed')
 
 print("""

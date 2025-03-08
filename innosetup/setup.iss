@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "YoHelper"
-#define MyAppVersion "0.0.1"
+#define MyAppVersion "v0.1"
 #define MyAppPublisher "Yoratt"
 #define MyAppURL "https://nedotube.vercel.app/"
 #define MyAppExeName "YoHelper.exe"

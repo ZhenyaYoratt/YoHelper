@@ -3,7 +3,10 @@ from PyQt5.QtCore import Qt, QThread, QDateTime, pyqtSignal, QObject
 from PyQt5.QtGui import QIcon, QColor
 from modules.task_manager import get_process_list, get_process_type, Process
 from modules.titles import make_title
-from psutil import boot_time
+try:
+    from psutil import boot_time
+except ImportError:
+    boot_time = lambda: 0
 
 def parse_precents(value):
     if value is not None and value > 100:

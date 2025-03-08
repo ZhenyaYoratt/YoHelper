@@ -403,14 +403,17 @@ QPushButton {
         self.update_system_info_button.setDisabled(True)
         self.system_info_table.setModel(QStandardItemModel())
         qApp.processEvents()
-        system_info = get_system_info()
-        model = QStandardItemModel(len(system_info), 2)
-        model.setHorizontalHeaderLabels([self.tr("Параметр"), self.tr("Значение")])
-        for i, (key, value) in enumerate(system_info.items()):
-            model.setItem(i, 0, QStandardItem(key + " "))
-            model.setItem(i, 1, QStandardItem(value))
-        self.system_info_table.setModel(model)
-        self.system_info_table.resizeColumnsToContents()
+        try:
+            system_info = get_system_info()
+            model = QStandardItemModel(len(system_info), 2)
+            model.setHorizontalHeaderLabels([self.tr("Параметр"), self.tr("Значение")])
+            for i, (key, value) in enumerate(system_info.items()):
+                model.setItem(i, 0, QStandardItem(key + " "))
+                model.setItem(i, 1, QStandardItem(value))
+            self.system_info_table.setModel(model)
+            self.system_info_table.resizeColumnsToContents()
+        except Exception as e:
+            QMessageBox.critical(self, self.tr("Ошибка"), self.tr("Не удалось получить информацию о компьютере"))
         self.update_system_info_button.setDisabled(False)
 
     def run_command(self):

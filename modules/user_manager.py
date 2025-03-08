@@ -1,16 +1,26 @@
 from subprocess import run
 from modules.logger import *
-from psutil import users
+try:
+    from psutil import users
 
-def list_users():
-    """Получает список пользователей в системе."""
-    try:
-        return users()
-    except Exception as e:
-        msg = f"Ошибка получения списка пользователей: {e}"
-        log(msg, ERROR)
-        return None
-
+    def list_users():
+        """Получает список пользователей в системе."""
+        try:
+            return users()
+        except Exception as e:
+            msg = f"Ошибка получения списка пользователей: {e}"
+            log(msg, ERROR)
+            return None
+except ImportError:
+    class suser:
+        name = 'Модуль psutil недоступен.'
+        terminal = None
+        host = None
+        started = 0
+        pid = 0
+    def list_users():
+        return suser()
+        
 def add_user(username, password):
     """Добавляет нового пользователя с паролем."""
     try:

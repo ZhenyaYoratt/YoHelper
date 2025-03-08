@@ -23,7 +23,7 @@ SOFTWARE_URLS = {
         "path": "simpleunlocker_release/SU.exe",
     },
     "ProcessHacker": {
-        "url": "",
+        "url": "https://raw.githubusercontent.com/ZhenyaYoratt/YoHelper/refs/heads/main/hosted_softwares/processhacker-2.39-bin.zip",
         "path": "x64/ProcessHacker.exe",
         "icon": "https://www.softportal.com/scr/14593/icons/process_hacker_72.png"
     },
@@ -50,7 +50,7 @@ SOFTWARE_URLS = {
     },
     "RegAlyzer": {
         "url": "https://raw.githubusercontent.com/ZhenyaYoratt/NedoHelper/refs/heads/main/hosted_softwares/RegAlyzerPortable.zip",
-        "path": "RegAlyzerPortable/RegAlyzer.exe",
+        "path": "RegAlyzerPortable/RegAlyzerPortable.exe",
         "icon": "https://cdn2.portableapps.com/RegAlyzerPortable_128.png"
     },
     "Total Commander": {

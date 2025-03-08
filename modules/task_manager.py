@@ -1,10 +1,29 @@
-from psutil import STATUS_RUNNING, STATUS_SLEEPING, STATUS_DISK_SLEEP, STATUS_STOPPED, STATUS_TRACING_STOP, STATUS_ZOMBIE, STATUS_DEAD, STATUS_WAKING, STATUS_IDLE, STATUS_LOCKED, STATUS_WAITING, STATUS_LOCKED, STATUS_PARKED, Process as pProcess, NoSuchProcess, AccessDenied, process_iter, REALTIME_PRIORITY_CLASS, HIGH_PRIORITY_CLASS
+
 import ctypes, os
 from ctypes import wintypes
 from .logger import *
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QMessageBox, QPushButton, QCheckBox
-
+try:
+    from psutil import STATUS_RUNNING, STATUS_SLEEPING, STATUS_DISK_SLEEP, STATUS_STOPPED, STATUS_TRACING_STOP, STATUS_ZOMBIE, STATUS_DEAD, STATUS_WAKING, STATUS_IDLE, STATUS_LOCKED, STATUS_WAITING, STATUS_LOCKED, STATUS_PARKED, Process as pProcess, NoSuchProcess, AccessDenied, process_iter, REALTIME_PRIORITY_CLASS, HIGH_PRIORITY_CLASS
+except ImportError:
+    log("Модуль psutil недоступен", ERROR)
+    
+    # Process.status()
+    STATUS_RUNNING = "running"
+    STATUS_SLEEPING = "sleeping"
+    STATUS_DISK_SLEEP = "disk-sleep"
+    STATUS_STOPPED = "stopped"
+    STATUS_TRACING_STOP = "tracing-stop"
+    STATUS_ZOMBIE = "zombie"
+    STATUS_DEAD = "dead"
+    STATUS_WAKE_KILL = "wake-kill"
+    STATUS_WAKING = "waking"
+    STATUS_IDLE = "idle"  # Linux, macOS, FreeBSD
+    STATUS_LOCKED = "locked"  # FreeBSD
+    STATUS_WAITING = "waiting"  # FreeBSD
+    STATUS_SUSPENDED = "suspended"  # NetBSD
+    STATUS_PARKED = "parked"  # Linux
 class Process():
     STATUS = {
         STATUS_RUNNING: "Выполняется",
