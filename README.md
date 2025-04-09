@@ -7,7 +7,7 @@ The multitool program will allow you to remove viruses (may be) and restore Wind
 [![DOWNLOAD THE LATEST VERSION](https://img.shields.io/badge/DOWNLOAD_THE_LATEST_VERSION-%231d7c15?style=for-the-badge&logo=github)](https://github.com/ZhenyaYoratt/YoHelper/releases/tag/v0.1) [![GitHub Downloads (all assets, latest release)](https://img.shields.io/github/downloads-pre/ZhenyaYoratt/YoHelper/latest/total?style=flat-square)](https://github.com/ZhenyaYoratt/YoHelper/releases/)
 
 > [!CAUTION]
-> This program needs to be improved to its ideal state. **Use it AT <ins>YOUR OWN RISK AND RISK</ins>, test it ONLY ON VIRTUAL MACHINES.** If you find problems, feel free to [create a Issue](/issues) and describe it!
+> This program needs to be improved to its ideal state. **Use it AT <ins>YOUR OWN RISK AND RISK</ins>, test it ONLY ON VIRTUAL MACHINES.** If you find problems, feel free to [create a Issue](https://github.com/ZhenyaYoratt/YoHelper/issues/new/choose) and describe it!
 > 
 > ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/ZhenyaYoratt/YoHelper?style=flat-square)
 
