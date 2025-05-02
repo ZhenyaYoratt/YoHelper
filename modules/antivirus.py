@@ -79,7 +79,7 @@ def load_database(databases_folder=DATABASES_FORLDER):
 
     # Проверяем, существует ли папка с файлами
     if not os.path.exists(databases_folder):
-        print(f"Папка {databases_folder} не найдена.")
+        log(f"Папка {databases_folder} не найдена.")
         return []
 
     # Проходим по всем файлам в папке

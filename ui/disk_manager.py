@@ -71,7 +71,7 @@ class DiskManagerWindow(QMainWindow, Window):
         letter_label = QLabel(f"{disk_letter} {disk_name}")
         letter_label.setStyleSheet("font-size: 20px; font-weight: bold;")
         letter_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        unlock_bitlocker_button = QPushButton(self.tr("Разблокировать диск"))
+        unlock_bitlocker_button = QPushButton(self.tr("Разблокировать диск c BitLocker"))
         unlock_bitlocker_button.clicked.connect(lambda: self.unlock_bitlocker(disk_letter))
         hlayout.addWidget(icon_label)
         hlayout.addWidget(letter_label)

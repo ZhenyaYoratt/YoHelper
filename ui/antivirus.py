@@ -1,6 +1,6 @@
 from PyQt5.QtCore import Qt, QThread
 from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QProgressBar, QListWidget, QFileDialog, QWidget, QCheckBox, QListWidgetItem
-from modules.antivirus import delete_file, UpdateWorker, ScanThread
+from modules.antivirus import delete_file, UpdateWorker, ScanThread, DATABASES_FORLDER
 from modules.titles import make_title
 from pyqt_windows_os_light_dark_theme_window.main import Window
 import os
@@ -65,7 +65,7 @@ class AntivirusWindow(QMainWindow, Window):
         central_widget.setLayout(layout)
         self.setCentralWidget(central_widget)
 
-    def update_db(self):
+    def update_db(self, after_start_scan = False, directory_scan = None):
         self.statusbar.showMessage(self.tr("Обновление базы данных..."))
         self.progress_bar.setValue(0)
         self.worker = UpdateWorker()
@@ -74,19 +74,25 @@ class AntivirusWindow(QMainWindow, Window):
         self.worker.completed.connect(lambda: (
             self.statusbar.showMessage(self.tr("Базы данных обновлены!")),
             self.progress_bar.setMaximum(1),
-            self.progress_bar.reset()
+            self.progress_bar.reset(),
+            (self.start_scan(directory = directory_scan) if after_start_scan else None)
         ))
         thread = QThread(self.parent())
         self.worker.moveToThread(thread)
         thread.started.connect(self.worker.run)
         thread.start()
 
-    def start_scan(self):
+    def start_scan(self, directory = None):
         """Начинает сканирование выбранной папки."""
-        directory = QFileDialog.getExistingDirectory(self, self.tr("Выберите папку для сканирования"))
+        if not directory:
+            directory = QFileDialog.getExistingDirectory(self, self.tr("Выберите папку для сканирования"))
         if not directory:
             self.statusbar.showMessage(self.parent().tr("Операция отменена пользователем"))
             return
+        
+        # Проверяем, существует ли папка с файлами
+        if not os.path.exists(DATABASES_FORLDER) or (os.path.exists(DATABASES_FORLDER) and len(os.listdir(DATABASES_FORLDER)) == 0):
+            self.update_db(after_start_scan = True, directory_scan = directory)
 
         self.statusbar.showMessage(self.tr("Сканирование..."))
         self.progress_bar.setValue(0)

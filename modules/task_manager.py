@@ -1,5 +1,5 @@
 
-import ctypes, os
+import ctypes, os, traceback
 from ctypes import wintypes
 from .logger import *
 from PyQt5.QtGui import QImage, QPixmap
@@ -45,6 +45,7 @@ class Process():
         'critical': 'Критический',
         'normal': 'Обычный',
     }
+    _icon_cache: dict[str, QPixmap] = {}
 
     def __init__(self, pid, name, status, cpu_percent, memory_percent, create_time, description, window_title):
         self.process_type = get_process_type(pid)
@@ -62,11 +63,27 @@ class Process():
             if self.pid == 0:
                 return None
             # Получение пути к исполняемому файлу процесса
-            process = pProcess(self.pid)
-            exe_path = process.exe()
+            try:
+                exe = pProcess(self.pid).exe()
+            except Exception:
+                return None
 
+            # Если уже в кеше — вернули
+            if exe in Process._icon_cache:
+                return Process._icon_cache[exe]
+            
+            # Иначе извлекаем и сохраняем
+            icon = self._extract_icon_from_exe(exe)
+            if icon:
+                Process._icon_cache[exe] = icon
+            return icon
+        except Exception as e:
+            log(f"Ошибка при получении иконки процесса с PID {self.pid}: {e}", ERROR)
+            return None
+    
+    def _extract_icon_from_exe(self, exe):
             # Извлечение иконки из исполняемого файла
-            hicon = ctypes.windll.shell32.ExtractIconW(0, exe_path, 0)
+            hicon = ctypes.windll.shell32.ExtractIconW(0, exe, 0)
             if hicon:
                 hdc = ctypes.windll.user32.GetDC(0)
                 hdc_mem = ctypes.windll.gdi32.CreateCompatibleDC(hdc)
@@ -98,9 +115,6 @@ class Process():
                 pixmap = QPixmap.fromImage(image)
                 ctypes.windll.gdi32.DeleteObject(hbm)
                 return pixmap
-            return None
-        except Exception as e:
-            log(f"Ошибка при получении иконки процесса с PID {self.pid}: {e}", ERROR)
             return None
 
     def kill(self):
@@ -216,19 +230,22 @@ class Process():
 def get_process_list():
     """Возвращает список активных процессов."""
     processes = []
-    for proc in process_iter(attrs=["pid", "name", "status", "cpu_percent", "memory_percent", "create_time", "username"]):
-        description = proc.info.get('description', '')
-        window_title = proc.info.get('window_title', '')
-        processes.append(Process(
-            proc.info['pid'],
-            proc.info['name'],
-            proc.info['status'],
-            proc.info['cpu_percent'],
-            proc.info['memory_percent'],
-            proc.info['create_time'],
-            description,
-            window_title
-        ))
+    try:
+        for proc in process_iter(attrs=["pid", "name", "status", "cpu_percent", "memory_percent", "create_time", "username"]):
+            description = proc.info.get('description', '')
+            window_title = proc.info.get('window_title', '')
+            processes.append(Process(
+                proc.info['pid'],
+                proc.info['name'],
+                proc.info['status'],
+                proc.info['cpu_percent'],
+                proc.info['memory_percent'],
+                proc.info['create_time'],
+                description,
+                window_title
+            ))
+    except Exception:
+        log('Не удалось получить список процессов. Модуль не активен', ERROR)
     return processes
 
 class ProcessType:
@@ -237,30 +254,43 @@ class ProcessType:
     NORMAL = 'normal'
 
 def is_process_critical(pid: int):
-    try:
-        process = pProcess(pid)
-        return process.nice() in [REALTIME_PRIORITY_CLASS, HIGH_PRIORITY_CLASS]
-    except NoSuchProcess:
-        log(f"Процесс с PID {pid} не найден.", WARNING)
-        return False
-    except Exception as e:
-        log(f"Ошибка при определении критичности процесса с PID {pid}: {e}", ERROR)
-        return False
+
+    PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+
+    # Открываем процесс с правом QUERY_LIMITED_INFORMATION
+    hProc = ctypes.windll.kernel32.OpenProcess(
+        PROCESS_QUERY_LIMITED_INFORMATION, False, pid
+    )
+    if not hProc:
+        raise PermissionError(f"Не удалось открыть процесс {pid}")
+
+    is_crit = wintypes.BOOL()
+    # BOOL IsProcessCritical(HANDLE, PBOOL)
+    res = ctypes.windll.kernel32.IsProcessCritical(hProc, ctypes.byref(is_crit))
+    ctypes.windll.kernel32.CloseHandle(hProc)
+    if res == 0:
+        raise OSError(f"IsProcessCritical вернул ошибку, код {ctypes.GetLastError()}")
+    return bool(is_crit.value)
 
 def get_process_type(pid):
     try:
         if pid == 0:
             return ProcessType.SYSTEM
         process = pProcess(pid)
-        if process.username() in ['SYSTEM', 'NT AUTHORITY\\SYSTEM', 'NT AUTHORITY\\СИСТЕМА', 'root', 'СИСТЕМА', 'NT AUTHORITY\\LOCAL SERVICE']:
-            return ProcessType.SYSTEM 
-        elif is_process_critical(process.pid):
-            return ProcessType.CRITICAL
-        else:
-            return ProcessType.NORMAL
+        try:
+            if process.username() in ['SYSTEM', 'NT AUTHORITY\\SYSTEM', 'NT AUTHORITY\\СИСТЕМА', 'root', 'СИСТЕМА', 'NT AUTHORITY\\LOCAL SERVICE']:
+                return ProcessType.SYSTEM
+            elif is_process_critical(process.pid):
+                return ProcessType.CRITICAL
+            else:
+                return ProcessType.NORMAL
+        except AccessDenied:
+            # Если доступ к имени пользователя запрещен, считаем процесс системным
+            return ProcessType.SYSTEM
     except NoSuchProcess:
         log(f"Процесс с PID {pid} не найден.", WARNING)
         return None
     except Exception as e:
+        print(traceback.format_exc())
         log(f"Ошибка при определении типа процесса с PID {pid}: {e}", ERROR)
         return None

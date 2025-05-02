@@ -2,7 +2,7 @@ setuptools
 pywin32
 PyQt5
 PyQtWebEngine
-psutil
+psutil==4.0.0
 requests
 pyinstaller
 free-proxy

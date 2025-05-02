@@ -1,12 +1,12 @@
-from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QMenu, QLineEdit, QTableWidget, QTableWidgetItem, QStatusBar, QWidget
-from PyQt5.QtCore import Qt, QThread, QDateTime, pyqtSignal, QObject
+from PyQt5.QtWidgets import QMainWindow, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QMenu, QLineEdit, QTableWidget, QTableWidgetItem, QStatusBar, QWidget, QTabWidget
+from PyQt5.QtCore import Qt, QThread, QDateTime, pyqtSignal, QObject, QRunnable, QThreadPool, QPoint
 from PyQt5.QtGui import QIcon, QColor
 from modules.task_manager import get_process_list, get_process_type, Process
 from modules.titles import make_title
 try:
     from psutil import boot_time
 except ImportError:
-    boot_time = lambda: 0
+    boot_time = lambda: -1
 
 def parse_precents(value):
     if value is not None and value > 100:
@@ -37,15 +37,32 @@ class ProcessListWorker(QObject):
     def stop(self):
         self._running = False
 
+class IconLoader(QObject):
+    icon_ready = pyqtSignal(int, QIcon)  # row, icon
+
+class IconTask(QRunnable):
+    def __init__(self, process: Process, row: int, loader: IconLoader):
+        super().__init__()
+        self.process = process
+        self.row = row
+        self.loader = loader
+
+    def run(self):
+        pixmap = self.process.get_process_icon()
+        if pixmap:
+            icon = QIcon(pixmap)
+            self.loader.icon_ready.emit(self.row, icon)
+
 class TaskManagerWindow(QMainWindow):
     def __init__(self, parent = None):
-        super().__init__()
-        self.setParent(parent)
+        super().__init__(parent)
         self.setWindowTitle(make_title(self.parent().tr("Диспетчер задач")))
         self.resize(1200, 700)
         self.setWindowFlags(Qt.WindowType.Dialog)
         self.setWindowFlag(Qt.WindowType.WindowContextHelpButtonHint, False)
         self.setStyleSheet(self.styleSheet() + "QPushButton { padding: 0px 4px; }")
+
+        self.tabs = QTabWidget(self)
 
         layout = QVBoxLayout()
 
@@ -75,7 +92,7 @@ class TaskManagerWindow(QMainWindow):
         self.search_bar.setClearButtonEnabled(True)
         self.search_bar.textChanged.connect(lambda text: self.filter_process_list(text))
 
-        boot_time_label = QLabel(self.tr("Время загрузки") + ": " + QDateTime.fromSecsSinceEpoch(int(boot_time())).toString(Qt.DateFormat.ISODate))
+        boot_time_label = QLabel(self.tr("Время загрузки BIOS") + ": " + QDateTime.fromSecsSinceEpoch(int(boot_time())).toString(Qt.DateFormat.ISODate))
 
         top_layout.addWidget(view_button)
         top_layout.addWidget(self.search_bar)
@@ -83,17 +100,28 @@ class TaskManagerWindow(QMainWindow):
 
         # Таблица процессов
         self.process_table = QTableWidget()
-        self.process_table.setColumnCount(10)
-        self.process_table.setHorizontalHeaderLabels([self.tr("Имя процесса"), self.tr("ЦП"), self.tr("ОЗУ"), self.tr("Состояние"), "PID", self.tr("Тип"), self.tr("Действия с процессом"), self.tr("Создано"), self.tr("Описание"), self.tr("Название заголовка")])
-        self.process_table.setSelectionBehavior(self.process_table.SelectRows)
-        self.process_table.setEditTriggers(self.process_table.NoEditTriggers)
+        self.process_table.setColumnCount(9)
+        self.process_table.setHorizontalHeaderLabels([self.tr("Имя процесса"), self.tr("ЦП"), self.tr("ОЗУ"), self.tr("Состояние"), "PID", self.tr("Тип"), self.tr("Создано"), self.tr("Описание"), self.tr("Название заголовка")])
+        self.process_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.process_table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
+        self.process_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self.process_table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.process_table.customContextMenuRequested.connect(self.on_table_context_menu)
 
         layout.addLayout(top_layout)
         layout.addWidget(self.process_table)
 
         central_widget = QWidget()
         central_widget.setLayout(layout)
-        self.setCentralWidget(central_widget)
+        self.tabs.addTab(central_widget, self.tr("Процессы"))
+        #label = QLabel('В разработке')
+        #label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        #self.tabs.addTab(label, self.tr("Производительность"))
+        self.setCentralWidget(self.tabs)
+
+        self.icon_loader = IconLoader()
+        self.icon_loader.icon_ready.connect(self.on_icon_ready)
+        self.thread_pool = QThreadPool.globalInstance()
 
         # Таймер обновления списка процессов
         self._worker = ProcessListWorker()
@@ -119,6 +147,28 @@ class TaskManagerWindow(QMainWindow):
         self.process_table.resizeRowsToContents()
         self.process_table.setColumnWidth(1, 65)
         self.process_table.setColumnWidth(2, 65)
+
+    def on_table_context_menu(self, pos: QPoint):
+        # получаем индекс ячейки, где кликнули
+        index = self.process_table.indexAt(pos)
+        if not index.isValid():
+            return
+
+        row = index.row()
+        proc = self.process_list_ui[row]
+
+        menu = QMenu(self.process_table)
+        kill_action     = menu.addAction(self.tr("Завершить процесс"))
+        suspend_action  = menu.addAction(self.tr("Приостановить"))
+        resume_action   = menu.addAction(self.tr("Возобновить"))
+
+        action = menu.exec(self.process_table.viewport().mapToGlobal(pos))
+        if action == kill_action:
+            proc.kill()
+        elif action == suspend_action:
+            proc.suspend()
+        elif action == resume_action:
+            proc.resume()
 
     def closeEvent(self, a0):
         self._worker.stop()
@@ -157,6 +207,8 @@ class TaskManagerWindow(QMainWindow):
 
     def refresh_process_list(self):
         """Обновляет список процессов."""
+        self.process_table.setUpdatesEnabled(False)
+
         count = len(self.process_list)
         count_ui = len(self.process_list_ui)
         self.statusBar().showMessage(self.tr("Всего: {0}. Показано процессов: {1} (из них скрыты: {2})").format(str(count), str(count_ui), str(count - count_ui)))
@@ -164,7 +216,6 @@ class TaskManagerWindow(QMainWindow):
         for row, process in enumerate(self.process_list_ui):
             process: Process = process
             item = QTableWidgetItem(process.name)
-            item.setIcon(QIcon(process.get_process_icon()))
             self.process_table.setItem(row, 0, item)
             cpu_item = QTableWidgetItem(parse_precents(process.cpu_percent) if process.pid != 0 else None)
             self.process_table.setItem(row, 1, cpu_item)
@@ -173,26 +224,12 @@ class TaskManagerWindow(QMainWindow):
             self.process_table.setItem(row, 3, QTableWidgetItem(Process.STATUS[process.status]))
             self.process_table.setItem(row, 4, QTableWidgetItem(str(process.pid)))
             self.process_table.setItem(row, 5, QTableWidgetItem(Process.PROCESS_TYPE[process.process_type]))
-            self.process_table.setItem(row, 7, QTableWidgetItem(parse_create_time(process.create_time)))
-            self.process_table.setItem(row, 8, QTableWidgetItem(process.description))
-            self.process_table.setItem(row, 9, QTableWidgetItem(process.window_title))
-            
-            actions = QWidget()
-            layout_actions = QHBoxLayout()
-            terminate_button = QPushButton(self.tr('Завершить'))
-            terminate_button.clicked.connect(process.kill)
-            suspend_button = QPushButton(self.tr('Приостановить'))
-            suspend_button.clicked.connect(process.suspend)
-            resume_button = QPushButton(self.tr('Возобновить'))
-            resume_button.clicked.connect(process.resume)
-            layout_actions.addWidget(terminate_button)
-            layout_actions.addWidget(suspend_button)
-            layout_actions.addWidget(resume_button)
-            layout_actions.setContentsMargins(0, 0, 0, 0)
-            actions.setLayout(layout_actions)
-            actions.setContentsMargins(0, 0, 0, 0)
-            self.process_table.setItem(row, 6, QTableWidgetItem())
-            self.process_table.setCellWidget(row, 6, actions)
+            self.process_table.setItem(row, 6, QTableWidgetItem(parse_create_time(process.create_time)))
+            self.process_table.setItem(row, 7, QTableWidgetItem(process.description))
+            self.process_table.setItem(row, 8, QTableWidgetItem(process.window_title))
+
+            task = IconTask(process, row, self.icon_loader)
+            self.thread_pool.start(task)
             
             # Set row color based on process type
             if process.process_type == 'system':
@@ -205,6 +242,14 @@ class TaskManagerWindow(QMainWindow):
             
             set_item_color(cpu_item, process.cpu_percent)
             set_item_color(ram_item, process.memory_percent)
+        
+        self.process_table.setUpdatesEnabled(True)
+        self.process_table.resizeRowsToContents()
+
+    def on_icon_ready(self, row: int, icon: QIcon) -> None:
+        item = self.process_table.item(row, 0)
+        if item:
+            item.setIcon(icon)
 
     def retranslateUi(self):
         self.setWindowTitle(make_title(self.parent().tr("Диспетчер задач")))

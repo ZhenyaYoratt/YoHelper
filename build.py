@@ -1,5 +1,5 @@
 import os
-from PyInstaller.utils.hooks import collect_submodules
+from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 import PyInstaller.__main__
 
 #print('Installing requirements...')
@@ -10,17 +10,20 @@ import PyInstaller.__main__
 
 
 print('Starting building...')
+
+
+datas = [('./.venv/Lib/site-packages/psutil/_pswindows.py', 'psutil'), ('./.venv/Lib/site-packages/psutil/_psutil_windows.pyd', 'psutil')]
 hiddenimports = collect_submodules('psutil')
 hiddenimports += collect_submodules('PyQt5.QtCore')
 hiddenimports += collect_submodules('PyQt5.QtGui')
 hiddenimports += collect_submodules('PyQt5.QtWidgets')
 print('hiddenimports:', hiddenimports)
 
-PyInstaller.__main__.run([
-    '.\\modules\\tts.py',
-    '--onefile',
-    '--windowed'
-])
+#PyInstaller.__main__.run([
+#    '.\\modules\\tts.py',
+#    '--onefile',
+#    '--windowed'
+#])
 
 PyInstaller.__main__.run([
     'main.py',

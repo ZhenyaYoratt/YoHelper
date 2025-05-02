@@ -1,4 +1,4 @@
-from .logger import *
+from .logger import log, ERROR, DEBUG
 from PyQt5.QtGui import QPixmap, QImage
 import subprocess
 
