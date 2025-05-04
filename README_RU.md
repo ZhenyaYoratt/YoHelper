@@ -45,19 +45,6 @@
 ```
 python build.py
 ```
-Или без использования Python файла:
-```
-pip install -r requirements.txt --upgrade
-
-python -m ensurepip --upgrade
-python -m pip install --upgrade setuptools
-
-pyinstaller .\modules\tts.py --onefile
-pyinstaller main.py --onefile -n NedoHelper --add-data dist:tts.exe
-pyinstaller installer.py --onefile --add-data dist:NedoHelper.exe
-```
-> [!ПРИМЕЧАНИЕ]
-> Перед запуском без использования Python файла необходимо установить следующие зависимости.
 
 ## Руководство по внесению изменений
 Пожалуйста, соблюдайте стандарты кодирования и добавляйте комментарии, где это необходимо. Для крупных изменений рекомендуется сначала открыть проблему, чтобы обсудить возможные изменения.
