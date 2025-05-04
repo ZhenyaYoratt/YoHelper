@@ -45,6 +45,19 @@ To build the program, just run this command:
 ```
 python build.py
 ```
+Or without using python:
+```
+pip install -r requirements.txt --upgrade
+
+python -m ensurepip --upgrade
+python -m pip install --upgrade setuptools
+
+pyinstaller .\modules\tts.py --onefile
+pyinstaller main.py --onefile -n NedoHelper --add-data dist:tts.exe
+pyinstaller installer.py --onefile --add-data dist:NedoHelper.exe
+```
+> [!NOTE]
+> You need to have the following dependencies installed before running without using python.
 
 
 ## Contributing Guidelines
