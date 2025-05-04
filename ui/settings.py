@@ -4,6 +4,7 @@ from PyQt5.QtCore import Qt, QTranslator
 from modules.titles import make_title
 import qdarktheme
 import json
+from pyqt_windows_os_light_dark_theme_window.main import Window
 
 LOCALIZATIONS_DIR = "localizations"
 
@@ -52,7 +53,7 @@ class Settings:
         self.data[key] = value
         self.save_settings()
 
-class SettingsWindow(QMainWindow):
+class SettingsWindow(QMainWindow, Window):
     SETTINGS_FILE = "settings.json"
 
     def __init__(self, parent = None):
@@ -215,7 +216,7 @@ class SettingsWindow(QMainWindow):
         qApp.setStyleSheet('')
         qApp.setPalette(QPalette())
         self.theme_combobox.setDisabled(False)
-        self.parent().update_button_icons(theme)
+        self.parent().update_button_icons()
         if theme_style == "modern":
             qdarktheme.setup_theme(theme)
             qdarktheme.setup_theme(theme)
@@ -223,32 +224,30 @@ class SettingsWindow(QMainWindow):
             qApp.setStyle(QStyleFactory.create("Fusion"))
             if theme == "dark":
                 palette = QPalette()
-                palette.setColor(QPalette.Window, QColor(53, 53, 53))
-                palette.setColor(QPalette.WindowText, Qt.white)
-                palette.setColor(QPalette.Base, QColor(25, 25, 25))
-                palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
-                palette.setColor(QPalette.ToolTipBase, Qt.black)
-                palette.setColor(QPalette.ToolTipText, Qt.white)
-                palette.setColor(QPalette.Text, Qt.white)
-                palette.setColor(QPalette.Button, QColor(53, 53, 53))
-                palette.setColor(QPalette.ButtonText, Qt.white)
-                palette.setColor(QPalette.BrightText, Qt.red)
-                palette.setColor(QPalette.Link, QColor(42, 130, 218))
-                palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
-                palette.setColor(QPalette.HighlightedText, Qt.black)
+                palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
+                palette.setColor(QPalette.ColorRole.WindowText, Qt.white)
+                palette.setColor(QPalette.ColorRole.Base, QColor(25, 25, 25))
+                palette.setColor(QPalette.ColorRole.AlternateBase, QColor(53, 53, 53))
+                palette.setColor(QPalette.ColorRole.ToolTipBase, Qt.black)
+                palette.setColor(QPalette.ColorRole.ToolTipText, Qt.white)
+                palette.setColor(QPalette.ColorRole.Text, Qt.white)
+                palette.setColor(QPalette.ColorRole.Button, QColor(53, 53, 53))
+                palette.setColor(QPalette.ColorRole.ButtonText, Qt.white)
+                palette.setColor(QPalette.ColorRole.BrightText, Qt.red)
+                palette.setColor(QPalette.ColorRole.Link, QColor(42, 130, 218))
+                palette.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
+                palette.setColor(QPalette.ColorRole.HighlightedText, Qt.black)
                 qApp.setPalette(palette)
         elif theme_style == "flat":
             self.settings.set("theme", "light")
             self.theme_combobox.setCurrentIndex(2)
             self.theme_combobox.setDisabled(True)
             qApp.setStyle(QStyleFactory.create("windowsvista"))
-            self.parent().update_button_icons("light")
         elif theme_style == "95":
             self.settings.set("theme", "light")
             self.theme_combobox.setCurrentIndex(2)
             self.theme_combobox.setDisabled(True)
             qApp.setStyle(QStyleFactory.create("Windows"))
-            self.parent().update_button_icons("light")
 
     def load_settings(self, apply = True):
         """Загружает настройки из файла."""

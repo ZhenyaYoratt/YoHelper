@@ -3,6 +3,7 @@ from PyQt5.QtCore import Qt, QThread, QDateTime, pyqtSignal, QObject, QRunnable,
 from PyQt5.QtGui import QIcon, QColor
 from modules.task_manager import get_process_list, get_process_type, Process
 from modules.titles import make_title
+from pyqt_windows_os_light_dark_theme_window.main import Window
 try:
     from psutil import boot_time
 except ImportError:
@@ -53,9 +54,10 @@ class IconTask(QRunnable):
             icon = QIcon(pixmap)
             self.loader.icon_ready.emit(self.row, icon)
 
-class TaskManagerWindow(QMainWindow):
+class TaskManagerWindow(QMainWindow, Window):
     def __init__(self, parent = None):
-        super().__init__(parent)
+        super().__init__()
+        self.setParent(parent)
         self.setWindowTitle(make_title(self.parent().tr("Диспетчер задач")))
         self.resize(1200, 700)
         self.setWindowFlags(Qt.WindowType.Dialog)

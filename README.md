@@ -1,10 +1,13 @@
-# YoHelper ![GitHub last commit](https://img.shields.io/github/last-commit/ZhenyaYoratt/YoHelper?style=flat-square) ![GitHub License](https://img.shields.io/github/license/ZhenyaYoratt/YoHelper?style=flat-square) ![GitHub top language](https://img.shields.io/github/languages/top/ZhenyaYoratt/YoHelper?style=flat-square)
+# YoHelper ![GitHub last commit](https://img.shields.io/github/last-commit/ZhenyaYoratt/YoHelper?style=flat-square)
+
+[![README - Русский](https://img.shields.io/badge/README-На_русском-red)
+](https://github.com/ZhenyaYoratt/YoHelper/blob/main/README_RU.md)
 
 ![Image of YoHelper](/docs/images/main_window.png)
 
 The multitool program will allow you to remove viruses (may be) and restore Windows 10 to its perfect state. This program is designed exclusively for [the YouTube channel "NEDOHACKERS Lite"](https://youtube.com/@nedohackerslite).
 
-[![DOWNLOAD THE LATEST VERSION](https://img.shields.io/badge/DOWNLOAD_THE_LATEST_VERSION-%231d7c15?style=for-the-badge&logo=github)](https://github.com/ZhenyaYoratt/YoHelper/releases/tag/v0.1) [![GitHub Downloads (all assets, latest release)](https://img.shields.io/github/downloads-pre/ZhenyaYoratt/YoHelper/latest/total?style=flat-square)](https://github.com/ZhenyaYoratt/YoHelper/releases/)
+[![DOWNLOAD THE LATEST VERSION](https://img.shields.io/badge/DOWNLOAD_THE_LATEST_VERSION-%231d7c15?style=for-the-badge&logo=github)](https://github.com/ZhenyaYoratt/YoHelper/releases) [![GitHub Downloads (all assets, latest release)](https://img.shields.io/github/downloads-pre/ZhenyaYoratt/YoHelper/latest/total?style=flat-square)](https://github.com/ZhenyaYoratt/YoHelper/releases/)
 
 > [!CAUTION]
 > This program needs to be improved to its ideal state. **Use it AT <ins>YOUR OWN RISK AND RISK</ins>, test it ONLY ON VIRTUAL MACHINES.** If you find problems, feel free to [create a Issue](https://github.com/ZhenyaYoratt/YoHelper/issues/new/choose) and describe it!
@@ -29,7 +32,6 @@ The following features are built into the program:
 - User Manager
 
 ## Known issues
-- The process type (Task Manager) are not displayed correctly.
 - The point recovery section is not working at the moment.
 - The installer cannot run a program that requires administrator privileges.
 <!-- There are no issues at the moment. If you find problems, feel free to [create a Issue](github.com/ZhenyaYoratt/YoHelper/issues) and describe it.-->
@@ -43,19 +45,6 @@ To build the program, just run this command:
 ```
 python build.py
 ```
-Or without using python:
-```
-pip install -r requirements.txt --upgrade
-
-python -m ensurepip --upgrade
-python -m pip install --upgrade setuptools
-
-pyinstaller .\modules\tts.py --onefile
-pyinstaller main.py --onefile -n NedoHelper --add-data dist:tts.exe
-pyinstaller installer.py --onefile --add-data dist:NedoHelper.exe
-```
-> [!NOTE]
-> You need to have the following dependencies installed before running without using python.
 
 
 ## Contributing Guidelines

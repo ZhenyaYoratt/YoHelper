@@ -192,9 +192,6 @@ except ImportError as e:
             self.signals.finished.emit(info)
 
     # Функции-замены при отсутствии модулей
-    def get_system_info():
-        return {"Ошибка": "Не удалось получить информацию о системе"}
-
     def get_load_info():
         return "Модуль недоступен"
 

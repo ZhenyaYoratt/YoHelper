@@ -35,7 +35,7 @@ keys_to_unlock = [
     ("NoStartMenu", "Отключение 'Пуск'", "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer"),
     ("NoRecentDocs", "Отключение 'Последние документы'", "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer"),
     ("NoNetHood", "Отключение 'Сетевое окружение'", "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer"),
-    ("NoEntireNetwork", "Отключение 'Сеть'", "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer"),
+    ("NoEntireNetwork", "Отключение 'Сеть'", "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Network"),
     ("NoDrives", "Отключение дисков", "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer"),
     ("NoComputersNearMe", "Отключение 'Компьютеры рядом со мной'", "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer"),
     ("NoChangeStartMenu", "Отключение изменения 'Пуск'", "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer"),
@@ -53,7 +53,7 @@ keys_to_unlock = [
     ("NoConfigPage", "Отключение настроек конфигурации", "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System"),
     ("NoWindowsUpdate", "Отключение обновлений Windows", "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\WindowsUpdate"),
     ("NoWindowsStore", "Отключение магазина Windows", "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\WindowsStore"),
-    ("NoEdgeBrowser", "Отключение браузера Edge", "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\MicrosoftEdge"),
+    ("NoEdgeBrowser", "Отключение браузера Edge", "Software\\Policies\\Microsoft\\Edge"),
     ("NoOneDrive", "Отключение OneDrive", "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\OneDrive"),
     ("NoCortana", "Отключение Cortana", "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Cortana"),
     ("NoTelemetry", "Отключение телеметрии", "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\DataCollection"),
@@ -129,7 +129,6 @@ keys_to_unlock = [
     ("NoXboxGameRatings", "Отключение рейтингов игр Xbox", "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\XboxGameRatings"),
     ("NoXboxGameAchievements", "Отключение достижений игр Xbox", "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\XboxGameAchievements"),
     ("NoXboxGameClips", "Отключение клипов игр Xbox", "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\XboxGameClips"),
-    # ...добавить остальные ключи...
 ]
 
 def run_scan():

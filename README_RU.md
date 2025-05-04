@@ -1,10 +1,13 @@
-# YoHelper ![GitHub last commit](https://img.shields.io/github/last-commit/ZhenyaYoratt/YoHelper?style=flat-square) ![GitHub License](https://img.shields.io/github/license/ZhenyaYoratt/YoHelper?style=flat-square) ![GitHub top language](https://img.shields.io/github/languages/top/ZhenyaYoratt/YoHelper?style=flat-square)
+# YoHelper ![GitHub last commit](https://img.shields.io/github/last-commit/ZhenyaYoratt/YoHelper?style=flat-square)
+
+[![README - English](https://img.shields.io/badge/README-English-blue)
+](https://github.com/ZhenyaYoratt/YoHelper/blob/main/README.md)
 
 ![Изображение YoHelper](/docs/images/main_window.png)
 
 Эта многофункциональная программа позволит вам удалить вирусы (возможно) и восстановить Windows 10 до идеального состояния. Программа разработана исключительно для [YouTube канала "NEDOHACKERS Lite"](https://youtube.com/@nedohackerslite).
 
-![GitHub Downloads (all assets, latest release)](https://img.shields.io/github/downloads/ZhenyaYoratt/YoHelper/latest/total?style=for-the-badge&logo=github) ![GitHub file size in bytes](https://img.shields.io/github/size/ZhenyaYoratt/YoHelper/main.py)
+[![СКАЧАТЬ ПОСЛЕДНЮЮ ВЕРСИЮ РЕЛИЗА](https://img.shields.io/badge/СКАЧАТЬ_ПОСЛЕДНЮЮ_ВЕРСИЮ-%231d7c15?style=for-the-badge&logo=github)](https://github.com/ZhenyaYoratt/YoHelper/releases) [![GitHub скачивания (все assets, последний резиз)](https://img.shields.io/github/downloads-pre/ZhenyaYoratt/YoHelper/latest/total?style=flat-square)](https://github.com/ZhenyaYoratt/YoHelper/releases/)
 
 > [!ВНИМАНИЕ]
 > Программа нуждается в доработке до идеального состояния. **Используйте ее НА <ins>СВОЙ СТРАХ И РИСК</ins>, тестируйте ТОЛЬКО НА ВИРТУАЛЬНЫХ МАШИНАХ.** Если вы найдете проблемы, не стесняйтесь [создать проблему](/issues) и описать ее!
@@ -16,8 +19,6 @@
 
 ## Скачать
 Скачайте [последнюю версию](https://github.com/ZhenyaYoratt/YoHelper/releases) программы. Также доступны хеши файлов и ссылки на антивирусные сканы.
-[![VirusTotal results](https://img.shields.io/badge/VirusTotal-blue?style=flat-square)](https://virustotal.com)
-<!-- VirusTotal/Trag.le -->
 
 ## Функции
 В программу встроены следующие функции:
@@ -31,8 +32,8 @@
 - Менеджер пользователей
 
 ## Известные проблемы
-- Тип процесса (Диспетчер задач) отображается некорректно.
-- Программа зависает при сканировании папки на вирусы.
+- В данный момент раздел управления точек восстановления не работает.
+- Установщик не может запустить программу, для которой требуются права администратора.
 <!-- В данный момент проблем нет. Если вы найдете проблемы, не стесняйтесь [создать проблему](github.com/ZhenyaYoratt/YoHelper/issues) и описать ее.-->
 
 ## TODO
@@ -44,7 +45,7 @@
 ```
 python build.py
 ```
-Или без использования python:
+Или без использования Python файла:
 ```
 pip install -r requirements.txt --upgrade
 
@@ -56,7 +57,7 @@ pyinstaller main.py --onefile -n NedoHelper --add-data dist:tts.exe
 pyinstaller installer.py --onefile --add-data dist:NedoHelper.exe
 ```
 > [!ПРИМЕЧАНИЕ]
-> Перед запуском без использования python необходимо установить следующие зависимости.
+> Перед запуском без использования Python файла необходимо установить следующие зависимости.
 
 ## Руководство по внесению изменений
 Пожалуйста, соблюдайте стандарты кодирования и добавляйте комментарии, где это необходимо. Для крупных изменений рекомендуется сначала открыть проблему, чтобы обсудить возможные изменения.

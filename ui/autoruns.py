@@ -1,15 +1,15 @@
 # ui/autoruns.py
 from PyQt5.QtWidgets import (
-    QMainWindow, QVBoxLayout, QTabWidget, QWidget,
-    QGroupBox, QTableWidget, QTableWidgetItem, QPushButton,
-    QHBoxLayout, QStatusBar, QHeaderView, QLabel, QDialog,
-    QFormLayout, QLineEdit, QComboBox, QFileDialog, QMessageBox, QStyledItemDelegate
+    QMainWindow, QVBoxLayout, QTabWidget, QWidget, QListWidget, QSplitter, QTreeWidget, QTreeWidgetItem,
+    QTableWidget, QTableWidgetItem, QPushButton, QHBoxLayout, QStatusBar, QHeaderView, QLabel, QDialog,
+    QFormLayout, QLineEdit, QComboBox, QFileDialog, QMessageBox, QGroupBox, QStyledItemDelegate
 )
-from PyQt5.QtCore import Qt, QDateTime
+from PyQt5.QtCore import Qt
 from modules.autoruns import *  # get_* and add_/remove_/edit_ functions
 from modules.titles import make_title
 from pyqt_windows_os_light_dark_theme_window.main import Window
 import subprocess, os, winreg
+import qtawesome as qta
 
 # Delegate to prevent eliding
 class NoElideDelegate(QStyledItemDelegate):
@@ -82,6 +82,12 @@ class FileEntryDialog(QDialog):
     def get_result(self):
         return { 'file': self.name_edit.text(), 'path': self.path_edit.text() }
 
+TASK_STATE = {0: 'Неизвестно',
+              1: 'Отключено',
+              2: 'В очереди',
+              3: 'Готово',
+              4: 'Работает'}
+
 class AutorunsWindow(QMainWindow, Window):
     def __init__(self, parent=None):
         super().__init__()
@@ -91,44 +97,52 @@ class AutorunsWindow(QMainWindow, Window):
         self.setWindowFlag(Qt.WindowType.WindowContextHelpButtonHint, False)
         self.available_drives = self.detect_system_drives()
         self.current_drive = self.available_drives[0] if self.available_drives else 'C:'
+        self.folder_icon = qta.icon('fa.folder')
+        self.task_icon = qta.icon('fa.play')
         self.initUI()
-        self.resize(900, 700)
+        self.resize(1000, 700)
         self.center()
-
-    def detect_system_drives(self):
-        # detect letters where Windows folder exists
-        drives = []
-        for letter in list("ABCDEFGHIJKLMNOPQRSTUVWXYZ"): 
-            path = f"{letter}:/Windows"
-            if os.path.isdir(path):
-                drives.append(f"{letter}:")
-        return drives
     
     def initUI(self):
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
         self.layout = QVBoxLayout(self.central_widget)
+
         # Drive selection
         if self.available_drives:
             hl = QHBoxLayout()
-            hl.addWidget(QLabel(self.tr("Выберите системный диск:")))
+            label = QLabel(self.tr("Выберите системный диск:"))
+            label.setAlignment(Qt.AlignmentFlag.AlignRight)
+            hl.addWidget(label)
             self.drive_combo = QComboBox()
             self.drive_combo.addItems(self.available_drives)
             self.drive_combo.currentTextChanged.connect(self.on_drive_changed)
             hl.addWidget(self.drive_combo)
             self.layout.addLayout(hl)
 
-        self.tabs = QTabWidget(); self.layout.addWidget(self.tabs)
-        self.registry_tab = QWidget(); self.folder_tab = QWidget()
-        self.tasks_tab = QWidget(); self.winlogon_tab = QWidget(); self.services_tab = QWidget()
+        self.tabs = QTabWidget()
+        self.layout.addWidget(self.tabs)
+        # Tabs
+        self.registry_tab = QWidget()
+        self.folder_tab = QWidget()
+        self.tasks_tab = QWidget()
+        self.winlogon_tab = QWidget()
+        self.services_tab = QWidget()
         self.tabs.addTab(self.registry_tab, self.tr("Реестр"))
         self.tabs.addTab(self.folder_tab, self.tr("Папка автозагрузки"))
         self.tabs.addTab(self.winlogon_tab, self.tr("Winlogon"))
         self.tabs.addTab(self.tasks_tab, self.tr("Планировщик задач"))
         self.tabs.addTab(self.services_tab, self.tr("Службы"))
-        self.status_bar = QStatusBar(); self.setStatusBar(self.status_bar)
-        self.init_registry_tab(); self.init_folder_tab()
-        self.init_tasks_tab(); self.init_winlogon_tab(); self.init_services_tab()
+
+        self.status_bar = QStatusBar()
+        self.setStatusBar(self.status_bar)
+
+        # Init each
+        self.init_registry_tab()
+        self.init_folder_tab()
+        self.init_tasks_tab()
+        self.init_winlogon_tab()
+        self.init_services_tab()
 
     def on_drive_changed(self, drive):
         self.current_drive = drive
@@ -165,17 +179,20 @@ class AutorunsWindow(QMainWindow, Window):
         self.load_registry()
 
     def load_registry(self):
+        hive_map = {
+            winreg.HKEY_CURRENT_USER: "HKEY_CURRENT_USER",
+            winreg.HKEY_LOCAL_MACHINE: "HKEY_LOCAL_MACHINE"
+        }
         for runonce, table in self.reg_tables.items():
             entries = get_autorun_registry(runonce, drive=self.current_drive)
             table.setRowCount(len(entries))
             for r, e in enumerate(entries):
                 table.setItem(r, 0, QTableWidgetItem(e['name']))
                 table.setItem(r, 1, QTableWidgetItem(str(e['data'])))
-                table.setItem(r, 2, QTableWidgetItem(e['location']))
+                hive_str = hive_map.get(e['hive'], str(e['hive']))
+                loc = f"{hive_str}\\{e['location']}"
+                table.setItem(r, 2, QTableWidgetItem(loc))
                 table.setItem(r, 3, QTableWidgetItem(str(e['type'])))
-                table.setRowHeight(r, 20)
-            table.resizeColumnsToContents()
-            table.resizeRowsToContents()
 
     def update_reg_buttons(self):
         for runonce, table in self.reg_tables.items():
@@ -190,8 +207,12 @@ class AutorunsWindow(QMainWindow, Window):
         if name == "Добавить":
             dlg = RegistryEntryDialog(self)
             if dlg.exec()==QDialog.Accepted:
-                res=dlg.get_result()
-                add_autorun_registry(res['name'], res['data'], res['type'], None, None, runonce)
+                res = dlg.get_result()
+                # выбираем по умолчанию первый путь из RUN_SUBKEYS или RUNONCE_SUBKEYS
+                from modules.autoruns import RUN_SUBKEYS, RUNONCE_SUBKEYS
+                keys = RUNONCE_SUBKEYS if runonce else RUN_SUBKEYS
+                hive, subkey = keys[0]
+                add_autorun_registry(res['name'], res['data'], res['type'], hive, subkey, runonce)
                 self.load_registry()
         else:
             # get selected entries
@@ -207,25 +228,48 @@ class AutorunsWindow(QMainWindow, Window):
 
     def init_folder_tab(self):
         layout = QVBoxLayout(self.folder_tab)
-        self.folder_tables = {}
-        for user, folder in get_startup_folders().items():
-            group = QGroupBox(user); gl = QVBoxLayout(group)
-            table = QTableWidget(); table.setColumnCount(5)
-            table.setHorizontalHeaderLabels([
-                self.tr("Название файла"), self.tr("Дата создания"), self.tr("Расположение"), self.tr("Дата открытия"), self.tr("Дата изменения")
-            ])
-            self.configure_table(table)
-            table.itemSelectionChanged.connect(self.update_folder_buttons)
-            gl.addWidget(table)
-            hl = QHBoxLayout()
-            table.btns = {}
-            for name in ["Добавить", "Удалить", "Изменить", "Открыть папку расположения"]:
-                btn = QPushButton(self.tr(name)); btn.clicked.connect(lambda _, n=name, u=user: self.on_folder_btn(n, u))
-                btn.setEnabled(name == "Добавить"); hl.addWidget(btn)
-                table.btns[btn.text()] = btn
-            gl.addLayout(hl); layout.addWidget(group)
-            self.folder_tables[user] = table
-        self.load_folders()
+        splitter = QSplitter(Qt.Horizontal)
+        # User list
+        self.user_list = QListWidget()
+        self.user_list.currentTextChanged.connect(self.on_user_selected)
+        splitter.addWidget(self.user_list)
+        # Table
+        self.folder_table = QTableWidget()
+        self.folder_table.setColumnCount(5)
+        self.folder_table.setHorizontalHeaderLabels([
+            self.tr("Название файла"), self.tr("Дата создания"),
+            self.tr("Расположение"), self.tr("Дата открытия"), self.tr("Дата изменения")
+        ])
+        self.folder_table.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
+        self.folder_table.setSelectionBehavior(QTableWidget.SelectRows)
+        splitter.addWidget(self.folder_table)
+        splitter.setStretchFactor(1, 3)
+        layout.addWidget(splitter)
+        # Buttons
+        hl = QHBoxLayout()
+        for name in ["Добавить", "Удалить", "Изменить", "Открыть папку расположения"]:
+            btn = QPushButton(self.tr(name))
+            btn.clicked.connect(lambda _, n=name: self.on_folder_btn(n))
+            setattr(self, f"folder_btn_{name}".replace(" ", "_"), btn)
+            hl.addWidget(btn)
+        layout.addLayout(hl)
+
+        # Load users
+        self.folders = get_startup_folder_entries()
+        for user in self.folders:
+            self.user_list.addItem(user)
+        if self.user_list.count():
+            self.user_list.setCurrentRow(0)
+
+    def on_user_selected(self, user):
+        entries = self.folders.get(user, [])
+        self.folder_table.setRowCount(len(entries))
+        for r, e in enumerate(entries):
+            self.folder_table.setItem(r, 0, QTableWidgetItem(e['file']))
+            self.folder_table.setItem(r, 1, QTableWidgetItem(e['created'].strftime("%Y-%m-%d %H:%M:%S")))
+            self.folder_table.setItem(r, 2, QTableWidgetItem(e['path']))
+            self.folder_table.setItem(r, 3, QTableWidgetItem(e['accessed'].strftime("%Y-%m-%d %H:%M:%S")))
+            self.folder_table.setItem(r, 4, QTableWidgetItem(e['modified'].strftime("%Y-%m-%d %H:%M:%S")))
 
     def load_folders(self):
         from modules.autoruns import get_startup_folder_entries
@@ -250,44 +294,133 @@ class AutorunsWindow(QMainWindow, Window):
             btns["Изменить"].setEnabled(sel and len({i.row() for i in table.selectedIndexes()}) == 1)
             btns["Открыть папку расположения"].setEnabled(sel)
 
-    def on_folder_btn(self, name, user):
-        table=self.folder_tables[user]; folder=get_startup_folders()[user]
-        rows=sorted({i.row() for i in table.selectedIndexes()})
-        data=[get_startup_folder_entries()[user][r] for r in rows]
-        if name=="Добавить":
-            dlg=FileEntryDialog(self)
-            if dlg.exec()==QDialog.Accepted:
-                res=dlg.get_result(); add_startup_file(folder, res['file'], res['path']); self.load_folders()
-        elif name=="Удалить": remove_startup_files(data); self.load_folders()
-        elif name=="Изменить" and len(data)==1:
-            dlg=FileEntryDialog(self, data[0])
-            if dlg.exec()==QDialog.Accepted:
-                res=dlg.get_result(); edit_startup_file(data[0], res['file'], folder); self.load_folders()
-        elif name=="Открыть папку расположения" and data:
+    def on_folder_btn(self, name):
+        user = self.user_list.currentItem().text()
+        entries = self.folders.get(user, [])
+        rows = sorted({i.row() for i in self.folder_table.selectedIndexes()})
+        sel = [entries[r] for r in rows]
+        folder = get_startup_folders()[user]
+        if name == "Добавить":
+            dlg = FileEntryDialog(self)
+            if dlg.exec() == QDialog.Accepted:
+                res = dlg.get_result()
+                add_startup_file(folder, res['file'], res['path'])
+        elif name == "Удалить":
+            remove_startup_files(sel)
+        elif name == "Изменить" and len(sel) == 1:
+            dlg = FileEntryDialog(self, sel[0])
+            if dlg.exec() == QDialog.Accepted:
+                res = dlg.get_result(); edit_startup_file(sel[0], res['file'], folder)
+        elif name == "Открыть папку расположения" and sel:
             subprocess.Popen(f'explorer "{folder}"')
+        # reload
+        self.folders = get_startup_folder_entries()
+        self.on_user_selected(user)
 
     def init_tasks_tab(self):
         layout = QVBoxLayout(self.tasks_tab)
-        self.tasks_table = QTableWidget(); self.tasks_table.setColumnCount(5)
-        self.tasks_table.setHorizontalHeaderLabels([
-            self.tr("Название задачи"), self.tr("Состояние"), self.tr("Расположение"), self.tr("Последний запуск"), self.tr("Последний результат")
+        self.tasks_tree = QTreeWidget()
+        self.tasks_tree.setHeaderLabels([
+            self.tr("Название задачи"), self.tr("Состояние"),
+            self.tr("Последний запуск"), self.tr("Последний результат"), self.tr("Папка")
         ])
-        self.configure_table(self.tasks_table)
-        layout.addWidget(self.tasks_table)
-        self.load_tasks()
+        self.tasks_tree.header().setSectionResizeMode(QHeaderView.Interactive)
+        self.tasks_tree.setColumnWidth(0, 300)
+        layout.addWidget(self.tasks_tree)
 
-    def load_tasks(self):
-        tasks=get_scheduled_tasks()
-        self.tasks_table.setRowCount(len(tasks))
-        for r,t in enumerate(tasks):
-            self.tasks_table.setItem(r,0,QTableWidgetItem(t['name']))
-            self.tasks_table.setItem(r,1,QTableWidgetItem(t['state']))
-            self.tasks_table.setItem(r,2,QTableWidgetItem(t['path']))
-            self.tasks_table.setItem(r,3,QTableWidgetItem(str(t['last_run'])))
-            self.tasks_table.setItem(r,4,QTableWidgetItem(str(t['last_result'])))
-        self.tasks_table.resizeColumnsToContents()
-        self.tasks_table.resizeRowsToContents()
+        hl = QHBoxLayout()
+        for name in ["Запустить", "Включить", "Отключить", "Удалить", "Обновить"]:
+            btn = QPushButton(self.tr(name))
+            btn.clicked.connect(lambda _, n=name: self.on_task_btn(n))
+            setattr(self, f"task_btn_{name}".replace(" ", "_"), btn)
+            hl.addWidget(btn)
+        layout.addLayout(hl)
+        self.load_tasks_tree()
 
+    def load_tasks_tree(self):
+        # preserve expanded paths
+        expanded = set()
+        def collect(item):
+            for i in range(item.childCount()):
+                c: QTreeWidgetItem = item.child(i)
+                if c.isExpanded():
+                    expanded.add(c.data(0, Qt.UserRole).Path if c.data(0, Qt.UserRole) else c.text(4))
+                collect(c)
+        collect(self.tasks_tree.invisibleRootItem())
+
+        self.tasks_tree.clear()
+        pythoncom.CoInitialize()
+        self.scheduler = win32com.client.Dispatch('Schedule.Service')
+        self.scheduler.Connect()
+        root_folder = self.scheduler.GetFolder('\\')
+        self._populate_task_folder(root_folder, self.tasks_tree.invisibleRootItem())
+
+        self.tasks_tree.collapseAll()
+        root_item = self.tasks_tree.topLevelItem(0)
+        if root_item:
+            self.tasks_tree.expandItem(root_item)
+        # restore expansions
+        def restore(item):
+            for i in range(item.childCount()):
+                c = item.child(i)
+                obj = c.data(0, Qt.UserRole)
+                path = obj.Path if obj else c.text(4)
+                if path in expanded:
+                    self.tasks_tree.expandItem(c)
+                restore(c)
+        restore(self.tasks_tree.invisibleRootItem())
+
+    def _populate_task_folder(self, folder, parent_item):
+        # folder: COM ITaskFolder
+        fi = QTreeWidgetItem(parent_item, [folder.Name, "", "", "", folder.Path])
+        fi.setIcon(0, self.folder_icon)
+        fi.setData(0, Qt.UserRole, folder)
+        # tasks
+        for task in folder.GetTasks(1):
+            ti = QTreeWidgetItem(fi, [
+                task.Name,
+                TASK_STATE.get(task.State, "Unknown"),
+                str(task.LastRunTime),
+                str(task.LastTaskResult),
+                folder.Path
+            ])
+            ti.setIcon(0, self.task_icon)
+            ti.setData(0, Qt.UserRole, task)
+        # subfolders
+        for sub in folder.GetFolders(0):
+            self._populate_task_folder(sub, fi)
+
+    def on_task_btn(self, action):
+        if action == "Обновить":
+            self.load_tasks_tree()
+        item = self.tasks_tree.currentItem()
+        if not item:
+            return
+        obj = item.data(0, Qt.UserRole)
+        try:
+            if hasattr(obj, 'Path'):
+                # it's a folder
+                if action == "Удалить":
+                    parent = item.parent()
+                    if parent:
+                        p_obj = parent.data(0, Qt.UserRole)
+                    else:
+                        p_obj = self.scheduler.GetFolder('\\')
+                    p_obj.DeleteFolder(obj.Name, 0)
+            else:
+                # it's a task
+                task = obj
+                folder = self.scheduler.GetFolder(item.text(4))
+                if action == "Запустить": task.Run(None)
+                elif action == "Включить": task.Enabled = True
+                elif action == "Отключить": task.Enabled = False
+                elif action == "Удалить": folder.DeleteTask(task.Name, 0)
+            # refresh tree for all actions except maybe refresh
+            self.load_tasks_tree()
+        except Exception as ex:
+            QMessageBox.warning(self, self.tr("Ошибка"), str(ex))
+        self.load_tasks_tree()
+    
     def init_winlogon_tab(self):
         layout = QVBoxLayout(self.winlogon_tab)
         self.win_tables = {}
@@ -309,18 +442,21 @@ class AutorunsWindow(QMainWindow, Window):
         self.load_winlogon()
 
     def load_winlogon(self):
+        hive_map = {
+            winreg.HKEY_CURRENT_USER: "HKEY_CURRENT_USER",
+            winreg.HKEY_LOCAL_MACHINE: "HKEY_LOCAL_MACHINE"
+        }
+        entries = get_winlogon_entries(drive=self.current_drive)
         for arch, table in self.win_tables.items():
-            entries = get_winlogon_entries(drive=self.current_drive)
             filt = [e for e in entries if e['arch'] == arch]
             table.setRowCount(len(filt))
             for r, e in enumerate(filt):
                 table.setItem(r, 0, QTableWidgetItem(e['name']))
                 table.setItem(r, 1, QTableWidgetItem(str(e['data'])))
-                table.setItem(r, 2, QTableWidgetItem(e['location']))
+                hive_str = hive_map.get(e['hive'], str(e['hive']))
+                loc = f"{hive_str}\\{e['location']}"
+                table.setItem(r, 2, QTableWidgetItem(loc))
                 table.setItem(r, 3, QTableWidgetItem(str(e['type'])))
-            table.resizeColumnsToContents()
-            table.resizeRowsToContents()
-
     def update_win_buttons(self):
         for arch, table in self.win_tables.items():
             sel = len(table.selectedIndexes()) > 0
@@ -379,6 +515,17 @@ class AutorunsWindow(QMainWindow, Window):
         name=self.svc_table.item(row,0).text()
         QMessageBox.information(self, self.tr("Свойства службы"), f"{self.tr('Служба')}: {name}")
 
+    def detect_system_drives(self):
+        # detect letters where Windows folder exists
+        drives = []
+        for letter in list("ABCDEFGHIJKLMNOPQRSTUVWXYZ"): 
+            path = f"{letter}:/Windows"
+            if os.path.isdir(path):
+                drives.append(f"{letter}:")
+        return drives
+    
     def center(self):
-        frame=self.frameGeometry(); center=self.screen().availableGeometry().center()
-        frame.moveCenter(center); self.move(frame.topLeft())
+        frame = self.frameGeometry()
+        center = self.screen().availableGeometry().center()
+        frame.moveCenter(center)
+        self.move(frame.topLeft())

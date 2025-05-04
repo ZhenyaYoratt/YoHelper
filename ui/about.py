@@ -12,6 +12,7 @@ class AboutWindow(QMainWindow, Window):
         self.setWindowTitle(make_title(self.tr("О программе")))
         self.setWindowFlags(Qt.WindowType.Dialog)
         self.setWindowFlag(Qt.WindowType.WindowContextHelpButtonHint, False)
+        self.resize(500, 270)
         self.initUI()
 
     def initUI(self):
@@ -23,6 +24,11 @@ class AboutWindow(QMainWindow, Window):
         layout.addWidget(self.header_label)
         
         buttons_layout = QHBoxLayout()
+
+        self.version_label = QLabel(self.tr("Версия программы: ") + self.parent().__version__, self)
+        self.version_label.setMargin(10)
+        self.version_label.setObjectName('version')
+        layout.addWidget(self.version_label)
 
         self.about_label = QLabel(self)
         self.about_label.setTextFormat(Qt.TextFormat.AutoText | Qt.TextFormat.RichText)

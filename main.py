@@ -1,7 +1,10 @@
+__version__ = '0.2'
+
 #print('Инициализация...')
 #import time
 # _startup = time.perf_counter()
-import ctypes, os#, ctypes.wintypes, os, atexit
+import ctypes, os
+from ctypes import wintypes
 
 # WM_CLOSE = 0x0010
 # WM_SYSCOMMAND = 0x0112
@@ -136,9 +139,9 @@ import ctypes, os#, ctypes.wintypes, os, atexit
 
 import sys, traceback
 from subprocess import Popen
-from PyQt5.QtWidgets import QMainWindow, QApplication, QVBoxLayout, QHBoxLayout, QLabel, QGroupBox, QPushButton, QCompleter, QLineEdit, QWidget, QMessageBox, qApp, QErrorMessage, QTableView, QListWidget, QListWidgetItem, QFileDialog
-from PyQt5.QtCore import Qt, QSize, QTimer, QThread, QCoreApplication, QTranslator, QLocale, QUrl
-from PyQt5.QtGui import QIcon, QStandardItemModel, QStandardItem, QColor, QDesktopServices
+from PyQt5.QtWidgets import QMainWindow, QApplication, QVBoxLayout, QHBoxLayout, QLabel, QGroupBox, QPushButton, QCompleter, QLineEdit, QWidget, QMessageBox, qApp, QErrorMessage, QTableView, QListWidget, QListWidgetItem, QFileDialog, QFileIconProvider
+from PyQt5.QtCore import Qt, QSize, QTimer, QThread, QCoreApplication, QUrl, QFileInfo #QTranslator, QLocale
+from PyQt5.QtGui import QIcon, QStandardItemModel, QStandardItem, QDesktopServices #QColor
 from PyQt5.QtWinExtras import QWinTaskbarButton
 from modules.process_launcher import ProcessLauncher
 from modules.logger import *
@@ -224,15 +227,20 @@ except:
     pass
 
 class VirusProtectionApp(QMainWindow, Window):
+    __version__ = '0.2'
+
     def __init__(self):
         super().__init__()
         self.setWindowFlag(Qt.WindowType.WindowCloseButtonHint, False)
-        self.setWindowFlag(Qt.WindowType.WindowMinMaxButtonsHint, False)
+        #self.setWindowFlag(Qt.WindowType.WindowMinMaxButtonsHint, False)
         self.setWindowTitle(make_title('YoHelper - MultiTool for Windows 10'))
         self.setMinimumSize(900, 400)
         self.resize(1000, 700)
-        self.setMaximumSize(1600, 1000)
-        self.setWindowIcon(QIcon('icon.ico'))
+        #self.setMaximumSize(1600, 1000)
+        fileInfo = QFileInfo(__file__)
+        iconProvider = QFileIconProvider()
+        icon = iconProvider.icon(fileInfo)
+        self.setWindowIcon(icon)
 
         self.setStyleSheet("""
 * {
@@ -253,6 +261,19 @@ QPushButton {
         self.initUI()
 
         self.threads = list()
+
+        self.reason = 'Подтвердите завершение работы, нажав кнопку выхода в окне программы'
+        try:
+            user32 = ctypes.windll.user32
+            ShutdownBlockReasonCreate = user32.ShutdownBlockReasonCreate
+            ShutdownBlockReasonCreate.argtypes = [wintypes.HWND, wintypes.LPCWSTR]
+            ShutdownBlockReasonCreate.restype  = wintypes.BOOL
+
+            if not ShutdownBlockReasonCreate(int(self.winId()), self.reason):
+                raise ctypes.WinError()
+        except Exception:
+            print(traceback.format_exc())
+            pass
 
     def initUI(self):
         # Основной макет
@@ -436,12 +457,18 @@ QPushButton {
         model.setItem(0, 0, QStandardItem("…"))
         model.setItem(0, 1, QStandardItem("…"))
         self.system_info_table.setModel(model)
+        self.update_system_info_button.setDisabled(True)
 
         worker = SystemInfoWorker()
         worker.signals.finished.connect(self.on_system_info_ready)
-        worker.signals.loaded.connect(self.on_system_info_ready)
+        worker.signals.loaded.connect(self.on_system_info_loaded)
         self.thread_pool.start(worker)
+        
     def on_system_info_ready(self, info: dict):
+        self.on_system_info_loaded(info)
+        self.update_system_info_button.setDisabled(False)
+
+    def on_system_info_loaded(self, info: dict):
         """Слот: получили данные — строим модель"""
         model = QStandardItemModel(len(info), 2)
         model.setHorizontalHeaderLabels([self.tr("Параметр"), self.tr("Значение")])
@@ -450,23 +477,9 @@ QPushButton {
             model.setItem(i, 1, QStandardItem(str(v)))
         self.system_info_table.setModel(model)
         self.system_info_table.resizeColumnsToContents()
+
     def update_system_info(self):
-        self.update_system_info_button.setDisabled(True)
-        self.system_info_table.setModel(QStandardItemModel())
-        qApp.processEvents()
-        try:
-            from modules.system_info import get_system_info, get_disk_info, get_load_info
-            system_info = get_system_info()
-            model = QStandardItemModel(len(system_info), 2)
-            model.setHorizontalHeaderLabels([self.tr("Параметр"), self.tr("Значение")])
-            for i, (key, value) in enumerate(system_info.items()):
-                model.setItem(i, 0, QStandardItem(key + " "))
-                model.setItem(i, 1, QStandardItem(value))
-            self.system_info_table.setModel(model)
-            self.system_info_table.resizeColumnsToContents()
-        except Exception as e:
-            QMessageBox.critical(self, self.tr("Ошибка"), self.tr("Не удалось получить информацию о компьютере"))
-        self.update_system_info_button.setDisabled(False)
+        self.defer_system_info()
     def run_command(self):
         """Запускает команду из текстового поля."""
         command = self.command_input.text().strip()
@@ -619,7 +632,6 @@ QPushButton {
         """Запуск bootim.exe"""
         btn: QPushButton = self.sender()
         btn.setDisabled(True)
-
         msg = QMessageBox()
         msg.setWindowTitle(self.tr("Среда восстановления"))
         msg.setText(self.tr('Вы уверены, что хотите открыть среду восстановления? Это перезагрузит компьютер в меню восстановления.\n\nПеред этим сохраните все несохранённые данные!'))
@@ -628,14 +640,13 @@ QPushButton {
         ret = msg.exec_()
         if ret == QMessageBox.Yes:
             Popen("shutdown.exe /r /o /t 0", shell=False)
+            self.hide()
         btn.setDisabled(False)
-        self.hide()
 
-    def update_button_icons(self, theme):
+    def update_button_icons(self):
         """Обновляет цвет иконок кнопок в зависимости от темы."""
-        icon_color = "white" if theme == "dark" else "black"
         for btn in self.module_buttons:
-            icon = qtawesome.icon(btn.icon_, color=icon_color)
+            icon = qtawesome.icon(btn.icon_)
             btn.setIcon(icon)
 
     def retranslateUi(self):
@@ -668,7 +679,25 @@ QPushButton {
 
     def closeEvent(self, event):
         """Предотвращает закрытие программы."""
-        QMessageBox.warning(self, self.tr("Предупреждение"), self.tr("Закрытие программы заблокировано! Используйте кнопку выхода."))
+        
+        #QMessageBox.warning(self, self.tr("Предупреждение"), self.tr("Закрытие программы заблокировано! Используйте кнопку выхода."))
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Icon.Warning)
+        msg.setWindowTitle("YoHelper")
+        msg.setText(self.tr("Закрытие программы заблокировано! Используйте кнопку выхода."))
+        msg.setStandardButtons(QMessageBox.Ok)
+        msg.exec_()
+        try:
+            user32 = ctypes.windll.user32
+            ShutdownBlockReasonCreate = user32.ShutdownBlockReasonCreate
+            ShutdownBlockReasonCreate.argtypes = [wintypes.HWND, wintypes.LPCWSTR]
+            ShutdownBlockReasonCreate.restype  = wintypes.BOOL
+
+            if not ShutdownBlockReasonCreate(int(msg.winId()), self.reason):
+                raise ctypes.WinError()
+        except Exception:
+            print(traceback.format_exc())
+            pass
         event.ignore()
 
 def main():
