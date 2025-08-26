@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "YoHelper (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "YoHelper (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

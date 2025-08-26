@@ -1,0 +1,91 @@
+pylupdate5 main.py -ts .\localizations\en.ts
+qt5-tools linguist
+
+
+
+
+
+
+WinRE
+
+Утилиты WinPE
+wpeutil.exe
+
+Disable BIOS
+
+Taskmgr:
+Копировать путь
+
+
+
+Напиши модуль редактора автозагрузок (с UI). Он содержит вкладки "Реестр", "Папка автозагрузки", "Планировщик задач", "Winlogon" и "Службы".
+
+В вкладке "Реестр" содержит две группы QGroupBox "Run" и "RunOnce" с списком с реестрами по столбцам "Название", "Значение реестра", "Расположение" и "Тип реестра".
+Для "Run":
+    HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+    HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+    HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run
+Для "Run":
+    HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce
+    HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce
+    HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\RunOnce
+Также нужно учесть, что может не быть раздела "Run" и "RunOnce".
+Также нужно добавить кнопки "Добавить", "Удалить", "Изменить" и "Открыть папку расположения"
+Кнопка "Добавить" открывает диалоговое окно с заполением полей "Название", "Значение" и "Тип реестра" (в меню содержит основные типы: REG_SZ, REG_DWORD, REG_QWORD. Также нужно добавить кнопку "Расширить", которая расширяет список типов реестра: REG_BINARY, REG_DWORD, REG_DWORD_LITTLE_ENDIAN, REG_DWORD_BIG_ENDIAN, REG_EXPAND_SZ, REG_LINK, REG_MULTI_SZ, REG_NONE, REG_QWORD, REG_QWORD_LITTLE_ENDIAN, REG_RESOURCE_LIST, REG_FULL_RESOURCE_DESCRIPTOR, REG_RESOURCE_REQUIREMENTS_LIST, и REG_SZ).
+Кнопка "Удалить" удаляет реестр одного или нескольких выделенных элементов. 
+Кнопки должны активны (кроме "Добавить"), когда выделен хотя бы один элемент. Кнопка "Изменить" работает только с одним элементом, то есть при выделении нескольких элементов не активна.
+
+В вкладке "Папка автозагрузки" находится группы QGroupBox с списком автозагрузок по столбцам "Название файла", "Дата создания", "Расположение файла", "Дата открытия" и "Дата изменения".
+Для каждого пользователя своя группа QGroupBox с именем пользователя:
+    C:\Users\<Имя пользователя>\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
+И для группы системы:
+    C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp
+Также нужно добавить кнопки "Добавить", "Удалить", "Изменить" и "Открыть папку расположения"
+Кнопка "Добавить" открывает диалоговое окно с заполением полей "Название файла" и "Расположение".
+Кнопка "Удалить" удаляет файлы одного или нескольких выделенных элементов. 
+Кнопки должны активны (кроме "Добавить"), когда выделен хотя бы один элемент. Кнопка "Изменить" работает только с одним элементом, то есть при выделении нескольких элементов не активна.
+
+
+В вкладке "Планировщик задач" находится список запланированных задач Windows по столбцам "Название задачи", "Состояние", "Расположение файла", "Последний запуск" и "Последний результат".
+Используя такой пример, сделай список с запланированными задачами:
+```
+import win32com.client
+
+TASK_STATE = {0: 'Неизвестно',
+              1: 'Выключено',
+              2: 'В очереди',
+              3: 'Готов к работе',
+              4: 'Запущено'}
+
+scheduler = win32com.client.Dispatch('Schedule.Service')
+scheduler.Connect()
+
+folders = [scheduler.GetFolder('\\')]
+while folders:
+    folder = folders.pop(0)
+    folders += list(folder.GetFolders(0))
+    for task in folder.GetTasks(1):
+        print('Path       : %s' % task.Path)
+        print('State      : %s' % TASK_STATE[task.State])
+        print('Last Run   : %s' % task.LastRunTime)
+        print('Last Result: %s\n' % task.LastTaskResult)
+```
+
+В вкладке "Winlogon" содержит группы QGroupBox с реестром "Shell" и "Userinit" по столбцам "Название", "Значение реестра", "Расположение" и "Тип реестра".
+Для каждой группы своё расположение:
+    "Система x64" - HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon
+    "Система x86" - HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\Winlogon
+Также нужно учесть, что может не быть раздела "Winlogon" и реестра "Shell" и "Userinit".
+Также нужно добавить кнопки "Добавить", "Удалить", "Изменить" и "Открыть папку расположения"
+Кнопка "Добавить" открывает диалоговое окно с заполением полей "Название", "Значение" и "Тип реестра" (в меню содержит основные типы: REG_SZ, REG_DWORD, REG_QWORD. Также нужно добавить кнопку "Расширить", которая расширяет список типов реестра: REG_BINARY, REG_DWORD, REG_DWORD_LITTLE_ENDIAN, REG_DWORD_BIG_ENDIAN, REG_EXPAND_SZ, REG_LINK, REG_MULTI_SZ, REG_NONE, REG_QWORD, REG_QWORD_LITTLE_ENDIAN, REG_RESOURCE_LIST, REG_FULL_RESOURCE_DESCRIPTOR, REG_RESOURCE_REQUIREMENTS_LIST, и REG_SZ).
+Кнопка "Удалить" удаляет реестр одного или нескольких выделенных элементов. 
+Кнопки должны активны (кроме "Добавить"), когда выделен хотя бы один элемент. Кнопка "Изменить" работает только с одним элементом, то есть при выделении нескольких элементов не активна.
+
+
+В вкладке "Службы" содержит список служб по столбцам "Название службы", "Состояние", "Тип запуска" и "Описание".
+
+Также нужно добавить кнопку "Свойства" (открывает свойства службы), должна активна, когда выделен только один элемент.
+
+
+
+signtool sign /f .\certificate.pfx /p yH6P0npsDVnm66yI /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 .\YoHelper.exe
