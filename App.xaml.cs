@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -15,6 +16,8 @@ using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using YoHelper.Models;
+using YoHelper.Utilities;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -26,7 +29,8 @@ namespace YoHelper
     /// </summary>
     public partial class App : Application
     {
-        private Window? _window;
+        public static Window? MainWindow { get; private set; }
+        public static AppSettings Settings { get; private set; } = new AppSettings();
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -34,6 +38,23 @@ namespace YoHelper
         /// </summary>
         public App()
         {
+            // Загружаем настройки прямо при старте (unpackaged — просто файл)
+            Settings = SettingsService.Load();
+
+            // Если пользователь выбрал язык — применяем PrimaryLanguageOverride до создания UI,
+            // чтобы ресурсы загрузились сразу.
+            if (!string.IsNullOrEmpty(Settings.Language))
+            {
+                try
+                {
+                    Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = Settings.Language;
+                }
+                catch
+                {
+                    // игнорируем, если по какой-то причине не удалось
+                }
+            }
+
             InitializeComponent();
         }
 
@@ -43,8 +64,21 @@ namespace YoHelper
         /// <param name="args">Details about the launch request and process.</param>
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
-            _window = new MainWindow();
-            _window.Activate();
+            MainWindow = new MainWindow();
+
+            // Применяем тему к корневому элементу, когда Content создан
+            // Предполагаем, что в MainWindow.Content есть FrameworkElement (Grid/Root)
+            if (MainWindow.Content is FrameworkElement root)
+            {
+                root.RequestedTheme = Settings.Theme switch
+                {
+                    "Light" => ElementTheme.Light,
+                    "Dark" => ElementTheme.Dark,
+                    _ => ElementTheme.Default
+                };
+            }
+
+            MainWindow.Activate();
         }
     }
 }

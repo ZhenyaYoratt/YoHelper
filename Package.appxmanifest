@@ -10,13 +10,13 @@
   <Identity
     Name="bd005733-4b8d-43ef-899c-a7ee326787ee"
     Publisher="CN=002_Zhenya"
-    Version="1.0.0.0" />
+    Version="0.1.0.0" />
 
   <mp:PhoneIdentity PhoneProductId="bd005733-4b8d-43ef-899c-a7ee326787ee" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
     <DisplayName>YoHelper</DisplayName>
-    <PublisherDisplayName>002_Zhenya</PublisherDisplayName>
+    <PublisherDisplayName>ZhenyaYoratt</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 

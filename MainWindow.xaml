@@ -10,10 +10,34 @@
     Title="YoHelper">
 
     <Window.SystemBackdrop>
-        <MicaBackdrop />
+        <DesktopAcrylicBackdrop />
     </Window.SystemBackdrop>
 
     <Grid>
+        <NavigationView x:Name="NavView" Loaded="NavView_Loaded" ItemInvoked="NavView_ItemInvoked" BackRequested="NavView_BackRequested">
+            <NavigationView.MenuItems>
+                <NavigationViewItem Tag="YoHelper.Pages.HomePage" Icon="Home" Content="Главная"/>
+                <NavigationViewItemHeader x:Name="MainPagesHeader" Content="Для Недохакеров"/>
+                <NavigationViewItem Tag="YoHelper.Pages.Modules.ProcessMonitor.MonitorPage" Content="Мониторинг">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE890;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <!--<NavigationViewItem Tag="NavigationViewDemo.GamesPage" Content="Games">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE7FC;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Tag="NavigationViewDemo.MusicPage" Icon="Audio" Content="Music"/> -->
+            </NavigationView.MenuItems>
 
+            <NavigationView.AutoSuggestBox>  <!-- See AutoSuggestBox documentation for  more info about how to implement search. -->
+                <AutoSuggestBox x:Name="NavViewSearchBox" QueryIcon="Find"/>
+            </NavigationView.AutoSuggestBox>
+
+            <ScrollViewer>
+                <Frame x:Name="ContentFrame" IsTabStop="True" NavigationFailed="ContentFrame_NavigationFailed"/>
+            </ScrollViewer>
+        </NavigationView>
     </Grid>
 </Window>

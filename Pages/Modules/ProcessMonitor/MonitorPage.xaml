@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="YoHelper.Pages.Modules.ProcessMonitor.MonitorPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:YoHelper.Pages.Modules.ProcessMonitor"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Padding="12" RowSpacing="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Монитор процесса" FontSize="20" FontWeight="SemiBold" />
+
+        <!-- Блок выбора .exe -->
+        <Border Grid.Row="1" Padding="8" Margin="0,8,0,0" CornerRadius="6" BorderThickness="1" BorderBrush="#E5E5E5">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBox x:Name="ExePathTextBox"
+                 Width="520"
+                 HorizontalAlignment="Left"
+                 PlaceholderText="Путь к .exe"
+                 TextChanged="ExePathTextBox_TextChanged" />
+
+                <!-- Значок UAC: появится когда манифест требует повышения -->
+                <FontIcon x:Name="UACIcon"
+                          Visibility="Collapsed"
+                   FontSize="20"
+                    Glyph="&#xE7EF;"
+                 ToolTipService.ToolTip="Требуется повышение прав"/>
+
+                <Button x:Name="BrowseButton" Content="Обзор" Click="Browse_Click" />
+
+                <Button x:Name="StartButton" Click="Start_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock x:Name="StartButtonIcon" Text="▶" />
+                        <TextBlock Text="Начать мониторинг" />
+                    </StackPanel>
+                </Button>
+
+                <Button x:Name="StopButton" Content="Остановить" Click="Stop_Click" IsEnabled="False" />
+            </StackPanel>
+        </Border>
+
+
+        <!-- Статус -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="12" VerticalAlignment="Top">
+            <TextBlock Text="Статус: " FontWeight="SemiBold" />
+            <TextBlock x:Name="StatusText" Text="Ожидание" />
+        </StackPanel>
+
+        <!-- Логи -->
+        <ListView x:Name="LogsListView" Grid.Row="3" Margin="0,8,0,0" SelectionMode="Extended" KeyDown="LogsListView_KeyDown">
+            <ListView.ContextFlyout>
+                <MenuFlyout>
+                    <MenuFlyoutItem Text="Копировать строку" Click="CopyMenuFlyoutItem_Click"/>
+                    <MenuFlyoutItem Text="Копировать сообщение" Click="CopyMessageMenuFlyoutItem_Click"/>
+                </MenuFlyout>
+            </ListView.ContextFlyout>
+
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="local:LogEntry">
+                    <Border BorderBrush="#EEE" BorderThickness="0,0,0,1" Padding="8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="180" />
+                                <ColumnDefinition Width="140" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="{x:Bind FormattedTimestamp}" Grid.Column="0" />
+                            <TextBlock Text="{x:Bind Type}" Grid.Column="1" />
+                            <TextBlock Text="{x:Bind Message}" Grid.Column="2" TextWrapping="Wrap" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+    </Grid>
+</Page>
