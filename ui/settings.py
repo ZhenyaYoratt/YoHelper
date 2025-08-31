@@ -212,14 +212,27 @@ class SettingsWindow(QMainWindow, Window):
         theme: str = self.settings.get("theme", "auto")
         theme_style: str = self.settings.get("theme_style", "auto")
         self.settings.set("theme", theme)
-        qdarktheme.setup_theme('light')
+        qdarktheme.load_palette('light')
         qApp.setStyleSheet('')
         qApp.setPalette(QPalette())
         self.theme_combobox.setDisabled(False)
         self.parent().update_button_icons()
+        self.parent().setStyleSheet("""
+        * {
+            font-size: 14px;
+            font-family: 'Consolas';
+        }
+        QPushButton {
+            padding: 5px 13px;
+        }""" if theme_style != "flat" else "" + """
+        #title {
+            font-size: 28px;
+            font-weight: bold;
+        }
+        """)
         if theme_style == "modern":
-            qdarktheme.setup_theme(theme)
-            qdarktheme.setup_theme(theme)
+            qdarktheme.load_palette(theme)
+            qdarktheme.load_palette(theme)
         elif theme_style == "fusion":
             qApp.setStyle(QStyleFactory.create("Fusion"))
             if theme == "dark":

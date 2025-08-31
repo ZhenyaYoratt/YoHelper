@@ -288,9 +288,9 @@ class BrowserWindow(QMainWindow, Window):
         if not self.urlbar.hasFocus():
             self.urlbar.setCursorPosition(0)
         if url.startswith("https://"):
-            self.httpsicon.setPixmap(qtawesome.icon("fa.lock").pixmap(16, 16))
+            self.httpsicon.setPixmap(qtawesome.icon("fa5s.lock").pixmap(16, 16))
         else:
-            self.httpsicon.setPixmap(qtawesome.icon("fa.unlock").pixmap(16, 16))
+            self.httpsicon.setPixmap(qtawesome.icon("fa5s.unlock").pixmap(16, 16))
 
     def current_tab(self) -> QWebEngineView | QWidget:
         return self.tabs.currentWidget()

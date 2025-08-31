@@ -53,6 +53,7 @@ Please ensure to adhere to the coding standards and include comments where neces
 - `Python` 3.11.9
 - `PyQt5` 5.15.11
 - `PyQtWebEngine` 5.15
+- `Visual Studio Build Tools` + `Microsoft C++ Build Tools 14.0+`
 
 See the full list in the file [requirements.txt](requirements.txt).
 

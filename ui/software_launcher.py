@@ -209,7 +209,7 @@ class SoftwareLauncher(QMainWindow, Window):
             button_layout.addWidget(button)
 
             delete_button = QPushButton()
-            delete_button.setIcon(qtawesome.icon("fa.trash", color="red"))
+            delete_button.setIcon(qtawesome.icon("fa5s.trash", color="red"))
             delete_button.clicked.connect(lambda checked, p=program_name: self.delete_program(p))
             delete_button.setMaximumSize(28, 28)
             button_layout.addWidget(delete_button)
@@ -221,10 +221,10 @@ class SoftwareLauncher(QMainWindow, Window):
         # Кнопка для предложения программы
         self.actions_buttons_layout = QHBoxLayout()
         self.suggest_button = QPushButton(self.tr("Предложить программу"))
-        self.suggest_button.setIcon(qtawesome.icon("fa.plus", color="green"))
+        self.suggest_button.setIcon(qtawesome.icon("fa5s.plus", color="green"))
         self.suggest_button.clicked.connect(self.suggest_program)
         self.folder_button = QPushButton(self.tr("Открыть папку"))
-        self.folder_button.setIcon(qtawesome.icon("fa.folder-open"))
+        self.folder_button.setIcon(qtawesome.icon("fa5s.folder-open"))
         self.folder_button.clicked.connect(self.open_folder)
         self.actions_buttons_layout.addWidget(self.suggest_button)
         self.actions_buttons_layout.addWidget(self.folder_button)

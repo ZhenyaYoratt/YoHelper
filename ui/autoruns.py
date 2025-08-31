@@ -97,8 +97,8 @@ class AutorunsWindow(QMainWindow, Window):
         self.setWindowFlag(Qt.WindowType.WindowContextHelpButtonHint, False)
         self.available_drives = self.detect_system_drives()
         self.current_drive = self.available_drives[0] if self.available_drives else 'C:'
-        self.folder_icon = qta.icon('fa.folder')
-        self.task_icon = qta.icon('fa.play')
+        self.folder_icon = qta.icon('fa5s.folder')
+        self.task_icon = qta.icon('fa5s.play')
         self.initUI()
         self.resize(1000, 700)
         self.center()

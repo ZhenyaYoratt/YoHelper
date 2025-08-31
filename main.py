@@ -154,12 +154,14 @@ from ui.user_manager import UserManagerWindow
 from ui.desktop_manager import DesktopManagerWindow
 from ui.system_restore import SystemRestoreWindow
 from ui.browser import BrowserWindow
+from ui.monitor import ProcessMonitorWindow 
 from ui.task_manager import TaskManagerWindow
 from ui.software_launcher import SoftwareLauncher
 from ui.settings import SettingsWindow
 from ui.about import AboutWindow
 from ui.unlocker import UnlockerWindow
 from ui.autoruns import AutorunsWindow
+from ui.anti_bsod import AntiBSODWindow
 from modules.system_info import SystemInfoWorker
 from PyQt5.QtCore import QThreadPool
 #from fp.fp import FreeProxy
@@ -168,7 +170,7 @@ from pyqt_windows_os_light_dark_theme_window.main import Window
 import qtawesome
 #import qtmdi
 
-#os.system('chcp 65001')
+os.system('chcp 65001')
 
 BANNER_TEXT = """
  __   __     _  _       _                 
@@ -325,7 +327,9 @@ QPushButton {
             ("Разблокировка ограничений", self.tr("Разблокировка ограничений"), self.open_unlocker, "mdi.lock-open"),
             ("Редактор автозагрузки", self.tr("Редактор автозагрузки"), self.open_autoruns, "mdi.file-document-edit-outline"),
             ("Диспетчер задач", self.tr("Диспетчер задач"), self.open_task_manager, "mdi.format-list-bulleted-square"),
+            ("Мониторинг", self.tr("Мониторинг"), self.open_monitor, "mdi.monitor-eye"),
             ("Запуск сторонних программ", self.tr("Запуск сторонних программ"), self.software_launcher.show, "mdi.application-cog"),
+            ("АнтиBSOD", self.tr("АнтиBSOD"), self.open_anti_bsod, "mdi.shield-bug"),
             ("Браузер", self.tr("Браузер"), lambda: self.open_browser(), "mdi.web"),
             ("Среда восстановления", self.tr("Среда восстановления"), self.open_bootim, "mdi.menu"),
             ("Управление дисками", self.tr("Управление дисками"), self.open_disk_manager, "mdi.harddisk"),
@@ -613,6 +617,22 @@ QPushButton {
         self.task_manager_window = TaskManagerWindow(self)
         self.task_manager_window.show()
         btn.setDisabled(False)
+    def open_monitor(self):
+        """Открывает окно Мониторинга."""
+        btn: QPushButton = self.sender()
+        btn.setDisabled(True)
+        qApp.processEvents()
+        self.process_monitor_window = ProcessMonitorWindow(self)
+        self.process_monitor_window.show()
+        btn.setDisabled(False)
+    def open_anti_bsod(self):
+        """Открывает окно АнтиBSOD."""
+        btn: QPushButton = self.sender()
+        btn.setDisabled(True)
+        qApp.processEvents()
+        self.anti_bsod_window = AntiBSODWindow(self)
+        self.anti_bsod_window.show()
+        btn.setDisabled(False)
     def open_settings(self):
         """Открывает окно Настроек."""
         btn: QPushButton = self.sender()
@@ -713,7 +733,7 @@ def main():
     #QNetworkProxy.setApplicationProxy(proxy)
 
     app = QApplication(sys.argv)
-    qdarktheme.setup_theme()
+    qdarktheme.load_palette()
     
     #say_async("Примечание: Чтобы сделать окно поверх всех окон, нажмите сочетание клавиш: Shift + F10")
 

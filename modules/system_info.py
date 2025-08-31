@@ -109,9 +109,9 @@ try:
                 try:
                     if check_disk_status(partition.mountpoint):
                         usage = disk_usage(partition.mountpoint)
-                        disk_data.append(f"{partition.mountpoint}: занято {usage.percent}%")
+                        disk_data.append(f"{partition.device}: занято {usage.percent}%")
                     else:
-                        disk_data.append(f"{partition.mountpoint}: недоступен")
+                        disk_data.append(f"{partition.device}: недоступен")
                 except:
                     log(f'Не удалось получить информацию использования диска {partition}', WARN)
             return "\n".join(disk_data)

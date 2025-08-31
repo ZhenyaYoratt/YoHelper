@@ -53,6 +53,7 @@ python build.py
 - `Python` 3.11.9
 - `PyQt5` 5.15.11
 - `PyQtWebEngine` 5.15
+- `Visual Studio Build Tools` + `Разработка классических приложений на C++` (`Microsoft C++ Build Tools 14.0+`)
 
 Полный список зависимостей можно найти в файле [requirements.txt](requirements.txt).
 
